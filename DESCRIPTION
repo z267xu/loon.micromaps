@@ -1,14 +1,16 @@
 Package: loon.micromaps
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Interactive Micromaps with loon
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: person('Alex', 'Wang', email = 'x249wang@uwaterloo.ca', role = c('aut', 'cre'))
+Maintainer: Alex Wang <x249wang@uwaterloo.ca>
+Description: Interactive conditioned choropleth maps and micromaps for visualizing geographical data.
+URL: https://github.com/x249wang/loon.micromaps.git
+License: GPL-2
+Depends:
+  R (>= 3.4.0),
+  loon
 Encoding: UTF-8
 LazyData: true
-LazyData: true
-Depends:
-  loon
+RoxygenNote: 6.0.1
+VignetteBuilder: knitr
