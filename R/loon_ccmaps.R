@@ -1,9 +1,9 @@
 
-## First add a modified MinMaxSlider
-## currently to use the WidgetFactory procedure
-## the class needs to be in the loon::classes namespace
+## Modified MinMaxSlider -----
 
-## note one \ is escaped with \\
+# Note that one \ is escaped with \\
+
+# Definition of modified MinMaxSlider (2 handles)
 .Tcl(
   '
   oo::class create ::loon::classes::MinMaxScale2 {
@@ -404,9 +404,7 @@
 )
 
 
-
-
-## creater function
+# Creater function
 .Tcl(
   "
   proc minmax_scale2 {args} {
@@ -415,176 +413,153 @@
   "
 )
 
-assignLevels <- function(x) {
-  x <- droplevels(as.factor(x))
 
-  if (nlevels(x)==1) {
-    x <- factor(x, labels=c("1"))
-  } else if (nlevels(x)==2) {
-    x <- factor(x, labels=c("1", "2"))
-  } else {
-    x <- factor(x, labels=c("1", "2", "3"))
-  }
+## Main function -----
 
-  x
-}
-
-# Partitions x (numeric list) using min(x), max(x), cut1 and cut2 as the break points. The breaks
-# do not need to be unique
-cutInterval <- function(x, cut1, cut2) {
-  cut(x, breaks=unique(c(min(x), cut1, cut2, max(x))), include.lowest=TRUE)
-}
-
-# Calculates slider settings for conditioning variables that gives high R^2 measures
-optimize <- function(otry, data, resp, cond1, cond2) {
-
-  grandmean <- mean(resp)
-
-  # otry number of values to try for each conditioning variable. Picks {otry choose 2} pairs (since
-  # order doesn't matter) of points as the middle two break points for partioning, as well as
-  # cases where the two middle break points are equal.
-  cond1combn <- combn(seq(min(cond1), max(cond1), length.out=otry), 2)
-  mat1 <- matrix(rep(seq(min(cond1), max(cond1), length.out=otry),2), nrow=2, byrow=T)
-  cond1combn <- cbind(cond1combn, mat1)
-  cond2combn <- combn(seq(min(cond2), max(cond2), length.out=otry), 2)
-  mat2 <- matrix(rep(seq(min(cond2), max(cond2), length.out=otry),2), nrow=2, byrow=T)
-  cond2combn <- cbind(cond2combn, mat2)
-
-  r2combn <- data.frame(numeric(), numeric(), numeric(), numeric(), numeric())
-
-  # Assigns groupings based on new combination of partioning points, and saves the corresponding
-  # R^2.
-  for (i in 1:ncol(cond1combn)) {
-    for (j in 1:ncol(cond2combn)) {
-      Cond1Cut1 <- cond1combn[1,i]
-      Cond1Cut2 <- cond1combn[2,i]
-      Cond2Cut1 <- cond2combn[1,j]
-      Cond2Cut2 <- cond2combn[2,j]
-
-      data$cond1_cat <- cutInterval(-cond1, -Cond1Cut1, -Cond1Cut2)
-      data$cond2_cat <- cutInterval(cond2, Cond2Cut1, Cond2Cut2)
-      data$cond1_cat <- assignLevels(data$cond1_cat)
-      data$cond2_cat <- assignLevels(data$cond2_cat)
-
-      gr <- data.frame(group=paste0(data$cond1_cat,data$cond2_cat))
-      if (!is.null(data@plotOrder)) {
-        gr <- gr[data@plotOrder,]
-      }
-
-      r2 <- r2calc(resp[data@plotOrder], gr)
-      r2combn <- rbind(r2combn, data.frame(Cond1Cut1, Cond1Cut2, Cond2Cut1, Cond2Cut2, r2))
-    }
-  }
-  colnames(r2combn) <- c("cond1cut1", "cond1cut2", "cond2cut1", "cond2cut2", "rsquared")
-  r2combn
-}
-
-# Source: https://github.com/waddella/loon/blob/5c2f0bb4fe71cbbd44ec97b96ec5f2ea1ec26a81/R/R/l_subwin.R
-# Was not part of the loon package loaded, so I included the function here
-# Creates a child path name under a parent (used for creating the sliders and labels for sliders)
-l_subwin <- function(parent, name="w") {
-  if(is(parent,"tkwin")) {
-    parent <- .Tk.ID(parent)
-  }
-
-  i <- 0
-  child <- paste0(parent, '.', name)
-  while(as.logical(tcl('winfo','exists', child))) {
-    i <- i + 1
-    child <- paste0(parent, '.', name, i)
-  }
-
-  return(child)
-}
-
-# Determines the colors to use for coloring regions. Needed since there might not be three categories
-# for the study variable (e.g. when the first and second break point are equal)
-colorList <- function(x, min, max, cut1, cut2) {
-  levels(x) <- levels(droplevels(x))
-  if (nlevels(x)==3) {
-    c("blue","grey","red")
-  } else if (nlevels(x)==2) {
-    if (min==cut1) { c("grey","red") }
-    else if (max==cut2) { c("blue","grey") }
-    else if (cut1==cut2) { c("blue","red") }
-  } else {
-    if (min==cut2) c("red")
-    else if (max==cut1) c("blue")
-    else c("grey")
-  }
-}
-
-# Calculates R^2 given the study variable values (i.e. state values in the formula) and the panel
-# assignment based on conditioning variables
-r2calc <- function(x, g) {
-  grandmean <- mean(x)
-  modelval <- aggregate(x, by=list(g), mean)
-  colnames(modelval) <- c("group", "modelvalue")
-  stateval <- data.frame(statevalue=x, group=g)
-  vals <- merge(stateval, modelval, by="group")
-  r2 <- sum((vals$modelvalue - grandmean)^2)/sum((vals$statevalue-grandmean)^2)
-  r2
-}
-
-
-#' Conditioned Choropleth Maps
+#' @title Conditioned choropleth maps
+#'
+#' @description 2-way panel of maps for visualizing multivariate data analysis
+#'
+#' @param data SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
+#'   including values for variables used for determining map coloring and panel positioning
+#' @param respvar character name of the response value variable
+#' @param cond1var character name of the first conditioning variable (controls
+#'   panel assignment in the vertical direction)
+#' @param cond2var character name of the second conditioning variable (controls
+#'   panel assignment in the horizontal direction)
+#' @param respbreaks determines how the response data is divided into three groups.
+#'   Can either be the integer 3 or a numeric vector of four break points.
+#'   Defaults to 3, in which case the response values are divided into tertiles
+#' @param optimize logical value indicating whether panel assignment should be optimized
+#'   for \eqn{R^2}. Defaults to FALSE, in which case the conditioning data is
+#'   divided into tertiles
+#' @param otry integer (greater than 0) indicating number of values to try
+#'   for optimization (see above). Required if \code{optimize = TRUE}.
+#'   Defaults to 10. A higher \code{otry} value leads to more precise estimates
+#'   at the cost of longer computation time
+#' @param title character string of the title of the map. Appears in the title bar
+#'   of the plot window. Defaults to "CCmaps"
 #'
 #' @export
 #'
-CCmaps_loon <- function (data, respvar, cond1var, cond2var, respbreaks=3, optimize=FALSE,
-                         otry=10, title="CCmaps") {
+#' @examples
+#'\dontrun{
+#'
+#' ## Example 1
+#' ## Get data
+#' library(rgdal)
+#' columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
+#'
+#' ## Plot
+#' l_ccmaps(data = columbus,
+#'          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
+#'          optimize = TRUE,
+#'          title = "Columbus Residential Burglaries and Vehicle Thefts")
+#'
+#'
+#' ## Example 2
+#' ## Get data
+#' library(rgdal)
+#' nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
+#'
+#' proj4string(nc.sids) <- CRS("+proj=longlat +ellps=clrk66")
+#' row.names(nc.sids) <- as.character(nc$FIPSNO)
+#'
+#' nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) +
+#'                                   sqrt((nc.sids$SID74+1)/nc.sids$BIR74))
+#'
+#' nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) +
+#'                                     sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
+#'
+#' ## Plot
+#' l_ccmaps(data = nc.sids,
+#'          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
+#'          optimize = TRUE,
+#'          title = "North Carolina SIDS rates")
+#'
+#'}
+#'
+l_ccmaps <- function(data, respvar, cond1var, cond2var,
+                     respbreaks = 3,
+                     optimize = FALSE, otry = 10,
+                     title = "CCmaps") {
 
-  # Basic checks on input arguments
+
   if (!is(data, "SpatialPolygonsDataFrame")) {
     stop("Data has to be of SpatialPolygonsDataFrame class")}
 
-  if (is.null(respvar)) {
-    stop("Study variable required")
+
+  var_len <- sapply(c('respvar', 'cond1var', 'cond2var', 'optimize', 'otry', 'title'),
+                    function(x) length(get(x)))
+
+  if (any(var_len) > 1) {
+    stop(paste(paste0(names(var_len)[var_len > 1], collapse = ', '),
+               "should be of length one"))
   }
 
-  if (is.null(cond1var) | is.null(cond2var)) {
-    stop("Two conditioning variables required")
-  }
 
-  if (length(respvar)!=1) {
-    stop("Only one response variable allowed")
-  }
-
-  if (length(cond1var)!=1 | length(cond1var)!=1) {
-    stop("The two conditioning variables must be entered as separate arguments")
-  }
-
-  if (otry%%1!=0 | otry<1) {
-    stop("otry must be an integer of greater than 0")
-  }
-
-  if (!is.logical(optimize)) {
-    stop("optimize must be either TRUE or FALSE")
-  }
-
-  if (!is.character(title)) {
-    stop("title must be a string or NULL")
-  }
-
-  if (!is.numeric(respbreaks)) {
-    stop("breaks must be either a numeric vector of four break points or a single 3")
-  }
-
-  if ((length(respbreaks)!=4) && (length(respbreaks)!=1)) {
-    stop("breaks must be either a numeric vector of four break points or an integer 31")
-  }
-
-  if ((length(respbreaks)==1) && (respbreaks!=3)) {
-    stop("breaks must be either a numeric vector of four break points or an integer 3")
+  if (!is.character(respvar)) {
+    stop("respvar (response variable name) should be of type character")
   }
 
   if (!(respvar %in% names(data))) {
-    stop("Response variable does not exist in the data")
+    stop("respvar (response variable name) does not exist in the data supplied")
   }
 
-  if (!(cond1var %in% names(data)) | !(cond2var %in% names(data))) {
-    stop("Conditioning variables must exist in the data")
+
+  if (!is.character(cond1var)) {
+    stop("cond1var (name of first conditioned variable) should be of type character")
   }
+
+  if (!(cond1var %in% names(data))) {
+    stop("cond1var (first conditioned variable) does not exist in the data supplied")
+  }
+
+
+  if (!is.character(cond2var)) {
+    stop("cond2var (name of second conditioned variable) should be of type character")
+  }
+
+  if (!(cond2var %in% names(data))) {
+    stop("cond2var (second conditioned variable) does not exist in the data supplied")
+  }
+
+
+  respbreaks_errmsg <- "respbreaks must be a numeric vector of four break points or the integer 3"
+
+  if (!is.numeric(respbreaks)) {
+    stop(respbreaks_errmsg)
+  }
+
+  if (length(respbreaks) == 1) {
+    if (respbreaks != 3) stop(respbreaks_errmsg)
+  } else if (length(respbreaks) != 4) {
+    stop(respbreaks_errmsg)
+  }
+
+
+  if (!is.logical(optimize)) {
+    stop("optimize must be a logical value")
+  }
+
+
+  if (optimize && !is.numeric(otry)) {
+    stop("otry must be an integer")
+  }
+
+  if (optimize && otry %% 1 != 0) {
+    stop('otry must be an integer')
+  }
+
+  if (optimize && otry < 1) {
+    stop("otry must be an integer greater or equal to 1")
+  }
+
+
+  if (!is.character(title)) {
+    stop("title must be a character string")
+  }
+
 
   tt <- tktoplevel()
   tktitle(tt) <- title
@@ -594,28 +569,33 @@ CCmaps_loon <- function (data, respvar, cond1var, cond2var, respbreaks=3, optimi
   # Group names, used for determining which regions are assigned to each plot. First number
   # refers to the horizontal conditioning variable category, and second number refers to the
   # vertical conditioning variable
-  group <- c("11", "12", "13", "21", "22", "23", "31", "32", "33")
+  group <- c(t(outer(1:3, 1:3, FUN = 'paste0')))
 
-  resp <- data@data[,respvar]
-  cond1 <- data@data[,cond1var]
-  cond2 <- data@data[,cond2var]
+  resp <- data@data[, respvar]
+  cond1 <- data@data[, cond1var]
+  cond2 <- data@data[, cond2var]
 
   if (!is.numeric(resp)) {
-    stop("Study variable must be continuous")
+    stop("Study variable must be numeric")
   }
 
   if (!is.numeric(cond1) | !is.numeric(cond2)) {
-    stop("Conditioning variables must be continuous")
+    stop("Conditioning variables must be numeric")
   }
+
 
   # If break points not given, use default of equal quantiles. Otherwise, use user-defined
   # break points
-  if (respbreaks==3) {
+  if (respbreaks == 3) {
+
     RespCut1 <- quantile(resp, probs=1/3)
     RespCut2 <- quantile(resp, probs=2/3)
+
   } else {
+
     RespCut1 <- respbreaks[2]
     RespCut2 <- respbreaks[3]
+
   }
 
   orig_RespCut1 <- RespCut1
@@ -627,19 +607,22 @@ CCmaps_loon <- function (data, respvar, cond1var, cond2var, respbreaks=3, optimi
   # If optimize=TRUE, break points for conditioning variables are obtained from the optimize()
   # function. Otherwise, use equal quantiles
   if (optimize==TRUE) {
-    results <- optimize(otry, data, resp, cond1, cond2)
-    results <- results[order(results$rsquared,decreasing=TRUE),]
-    rsquared <- results[1,5]
 
-    Cond1Cut1 <- results[1,1]
-    Cond1Cut2 <- results[1,2]
-    Cond2Cut1 <- results[1,3]
-    Cond2Cut2 <- results[1,4]
+    results <- optimize(otry, data, resp, cond1, cond2)
+
+    rsquared <- results$r2[1]
+    Cond1Cut1 <- results$Cond1Cut1[1]
+    Cond1Cut2 <- results$Cond1Cut2[1]
+    Cond2Cut1 <- results$Cond2Cut1[1]
+    Cond2Cut2 <- results$Cond2Cut2[1]
+
   } else {
+
     Cond1Cut1 <- quantile(cond1, probs=1/3)
     Cond1Cut2 <- quantile(cond1, probs=2/3)
     Cond2Cut1 <- quantile(cond2, probs=1/3)
     Cond2Cut2 <- quantile(cond2, probs=2/3)
+
   }
 
   orig_Cond1Cut1 <- Cond1Cut1
@@ -849,11 +832,134 @@ CCmaps_loon <- function (data, respvar, cond1var, cond2var, respbreaks=3, optimi
   tkgrid(r2label, row=4, column=3, sticky="nesw")
   tkgrid(resetbutton, row=4, column=0)
 
-  tkgrid.columnconfigure(tt, 3, weight=10)
+  tkgrid.columnconfigure(tt, 3, weight=6)
   tkgrid.rowconfigure(tt, 0, weight=4)
   tkgrid.rowconfigure(tt, 4, weight=4)
   for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight=5) }
   for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight=5) }
 
 }
+
+
+## Helper Functions -----
+
+#' Partitions x (numeric vector) into up to three intervals, with break points
+#'   defined by the minimum, cut_lwr, cut_upr and maximum.
+#'   Break points need not be unique
+#'
+cut_interval <- function(x, cut_lwr, cut_upr) {
+
+  cut(x,
+      breaks = unique(c(min(x), cut_lwr, cut_upr, max(x))),
+      include.lowest = TRUE)
+
+}
+
+
+#' Renames the levels for a vector of factors levels from '1' up to '3'
+#'   depending on the number of existing levels in use
+#'
+assign_level <- function(x) {
+
+  x <- droplevels(x)
+
+  factor(x, labels = 1:nlevels(x))
+
+}
+
+
+#' Determines the colors to use for coloring regions. Needed since there might
+#'   not be three categories for the study variable (e.g. when the first and
+#'   second break point are equal)
+#'
+assign_colors <- function(x, min, max, cut1, cut2) {
+
+  levels(x) <- levels(droplevels(x))
+
+  if (nlevels(x)==3) {
+    c("blue","grey","red")
+  } else if (nlevels(x)==2) {
+    if (min==cut1) { c("grey","red") }
+    else if (max==cut2) { c("blue","grey") }
+    else if (cut1==cut2) { c("blue","red") }
+  } else {
+    if (min==cut2) c("red")
+    else if (max==cut1) c("blue")
+    else c("grey")
+  }
+}
+
+
+#' Calculates R^2 given the study variable values and the panel assignment
+#'   based on the conditioning variables
+#'
+#' @importFrom dplyr %>% group_by mutate ungroup summarise
+#'
+r2 <- function(x, group) {
+
+  overall_mean <- mean(x)
+
+  df <- data.frame(act_value = x, group = group) %>%
+    group_by(group) %>%
+    mutate(fitted_value = mean(act_value)) %>%
+    ungroup() %>%
+    summarise(r2 = sum((fitted_value - overall_mean)^2)/sum((act_value - overall_mean)^2))
+
+  as.numeric(df)
+
+}
+
+
+#' Computes the R^2 measures by trying a number of possible partitioning points
+#'   on the two conditioning variables, and returns the results in a data.frame
+#'   sorted in decreasing order by the R^2
+#'
+r2_optimize <- function(otry, data, resp, cond1, cond2) {
+
+  overall_mean <- mean(resp)
+
+  # otry number of values to try for each conditioning variable. Picks {otry choose 2} pairs (since
+  # order doesn't matter) of points as the middle two break points for partioning, as well as
+  # cases where the two middle break points are equal.
+  cond1combn <- cbind(combn(seq(min(cond1), max(cond1), length.out = otry), 2),
+                      matrix(rep(seq(min(cond1), max(cond1), length.out = otry), times = 2),
+                             nrow = 2, byrow = T))
+
+  cond2combn <- cbind(combn(seq(min(cond2), max(cond2), length.out = otry), 2),
+                      matrix(rep(seq(min(cond2), max(cond2), length.out = otry), times = 2),
+                             nrow = 2, byrow = T))
+
+  r2combn <- data.frame(numeric(), numeric(), numeric(), numeric(), numeric())
+
+  # Assigns groupings based on new combination of partioning points, and saves the corresponding
+  # R^2.
+  for (i in 1:ncol(cond1combn)) {
+    for (j in 1:ncol(cond2combn)) {
+
+      Cond1Cut1 <- cond1combn[1,i]
+      Cond1Cut2 <- cond1combn[2,i]
+      Cond2Cut1 <- cond2combn[1,j]
+      Cond2Cut2 <- cond2combn[2,j]
+
+      data$cond1_cat <- cutInterval(-cond1, -Cond1Cut1, -Cond1Cut2)
+      data$cond2_cat <- cutInterval(cond2, Cond2Cut1, Cond2Cut2)
+      data$cond1_cat <- assignLevels(data$cond1_cat)
+      data$cond2_cat <- assignLevels(data$cond2_cat)
+
+      gr <- data.frame(group=paste0(data$cond1_cat,data$cond2_cat))
+      if (!is.null(data@plotOrder)) {
+        gr <- gr[data@plotOrder,]
+      }
+
+      r2 <- r2calc(resp[data@plotOrder], gr)
+      r2combn <- rbind(r2combn, data.frame(Cond1Cut1, Cond1Cut2, Cond2Cut1, Cond2Cut2, r2))
+    }
+  }
+  colnames(r2combn) <- c("cond1cut1", "cond1cut2", "cond2cut1", "cond2cut2", "rsquared")
+
+  r2combn <- r2combn[order(r2combn$rsquared, decreasing=TRUE), ]
+
+
+}
+
 
