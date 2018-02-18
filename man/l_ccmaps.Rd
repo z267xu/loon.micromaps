@@ -13,9 +13,11 @@ including values for variables used for determining map coloring and panel posit
 
 \item{respvar}{character name of the response value variable}
 
-\item{cond1var}{character name of the first conditioning variable}
+\item{cond1var}{character name of the first conditioning variable (controls
+panel assignment in the vertical direction)}
 
-\item{cond2var}{character name of the second conditioning variable}
+\item{cond2var}{character name of the second conditioning variable (controls
+panel assignment in the horizontal direction)}
 
 \item{respbreaks}{determines how the response data is divided into three groups.
 Can either be the integer 3 or a numeric vector of four break points.
@@ -41,6 +43,7 @@ of the plot window. Defaults to "CCmaps"}
 
 ## Example 1
 ## Get data
+library(maptools)
 library(rgdal)
 columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 
@@ -53,6 +56,7 @@ l_ccmaps(data = columbus,
 
 ## Example 2
 ## Get data
+library(maptools)
 library(rgdal)
 nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
 
@@ -68,7 +72,7 @@ nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) +
 ## Plot
 l_ccmaps(data = nc.sids,
          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
-         optimize = TRUE,
+         optimize = FALSE,
          title = "North Carolina SIDS rates")
 
 }

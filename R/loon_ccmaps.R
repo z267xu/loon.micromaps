@@ -447,6 +447,7 @@
 #'
 #' ## Example 1
 #' ## Get data
+#' library(maptools)
 #' library(rgdal)
 #' columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 #'
@@ -459,6 +460,7 @@
 #'
 #' ## Example 2
 #' ## Get data
+#' library(maptools)
 #' library(rgdal)
 #' nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
 #'
@@ -474,12 +476,13 @@
 #' ## Plot
 #' l_ccmaps(data = nc.sids,
 #'          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
-#'          optimize = TRUE,
+#'          optimize = FALSE,
 #'          title = "North Carolina SIDS rates")
 #'
 #'}
 #'
-l_ccmaps <- function(data, respvar, cond1var, cond2var,
+l_ccmaps <- function(data,
+                     respvar, cond1var, cond2var,
                      respbreaks = 3,
                      optimize = FALSE, otry = 10,
                      title = "CCmaps") {
@@ -561,16 +564,6 @@ l_ccmaps <- function(data, respvar, cond1var, cond2var,
   }
 
 
-  tt <- tktoplevel()
-  tktitle(tt) <- title
-
-  n <- 9 # 9 plots from 3x3 panel
-
-  # Group names, used for determining which regions are assigned to each plot. First number
-  # refers to the horizontal conditioning variable category, and second number refers to the
-  # vertical conditioning variable
-  group <- c(t(outer(1:3, 1:3, FUN = 'paste0')))
-
   resp <- data@data[, respvar]
   cond1 <- data@data[, cond1var]
   cond2 <- data@data[, cond2var]
@@ -582,6 +575,50 @@ l_ccmaps <- function(data, respvar, cond1var, cond2var,
   if (!is.numeric(cond1) | !is.numeric(cond2)) {
     stop("Conditioning variables must be numeric")
   }
+
+  if (!is.null(data@plotOrder)) {
+    resp <- resp[data@plotOrder]
+    cond1 <- cond1[data@plotOrder]
+    cond2 <- cond2[data@plotOrder]
+  }
+
+
+
+  tt <- tktoplevel()
+  tktitle(tt) <- title
+
+  n <- 9 # 9 plots from 3x3 panel
+
+  # Group names, used for determining which regions are assigned to each plot. First number
+  # refers to the horizontal conditioning variable category, and second number refers to the
+  # vertical conditioning variable
+  group <- c(t(outer(1:3, 1:3, FUN = 'paste0')))
+
+
+  # Setting up plots and layer groups
+  p <- vector(length = n)
+
+  for (i in 1:n) {
+    p[i] <- l_plot(parent = tt)
+  }
+
+  g <- vector(length = n)
+
+  for (i in 1:n) {
+    g[i] <- l_layer_group(p[i])
+  }
+
+
+  # Plotting polygons
+  pols <- vector("list",length = n)
+
+  for (i in 1:n) {
+
+    pols[[i]] <- l_layer(p[i], parent = g[i], data, color = "cornsilk", asSingleLayer = FALSE)
+    l_scaleto_world(p[i])
+
+  }
+
 
 
   # If break points not given, use default of equal quantiles. Otherwise, use user-defined
@@ -598,23 +635,25 @@ l_ccmaps <- function(data, respvar, cond1var, cond2var,
 
   }
 
-  orig_RespCut1 <- RespCut1
-  orig_RespCut2 <- RespCut2
-
   # Categorical variable corresponding to the intervals in study variable
-  data$resp_cat <- cutInterval(resp, RespCut1, RespCut2)
+  data$resp_cat <- cut_interval(resp, RespCut1, RespCut2)
+
+  attr(data$resp_cat, 'RespCut1') <- RespCut1
+  attr(data$resp_cat, 'RespCut2') <- RespCut2
+  attr(data$resp_cat, 'colors') <- assign_colors(min(resp), max(resp), RespCut1, RespCut2)
+
+
 
   # If optimize=TRUE, break points for conditioning variables are obtained from the optimize()
   # function. Otherwise, use equal quantiles
-  if (optimize==TRUE) {
+  if (optimize) {
 
-    results <- optimize(otry, data, resp, cond1, cond2)
+    results <- r2_optimize(otry, resp, cond1, cond2)
 
-    rsquared <- results$r2[1]
-    Cond1Cut1 <- results$Cond1Cut1[1]
-    Cond1Cut2 <- results$Cond1Cut2[1]
-    Cond2Cut1 <- results$Cond2Cut1[1]
-    Cond2Cut2 <- results$Cond2Cut2[1]
+    Cond1Cut1 <- results$cond1cut1[1]
+    Cond1Cut2 <- results$cond1cut2[1]
+    Cond2Cut1 <- results$cond2cut1[1]
+    Cond2Cut2 <- results$cond2cut2[1]
 
   } else {
 
@@ -625,218 +664,235 @@ l_ccmaps <- function(data, respvar, cond1var, cond2var,
 
   }
 
-  orig_Cond1Cut1 <- Cond1Cut1
-  orig_Cond1Cut2 <- Cond1Cut2
-  orig_Cond2Cut1 <- Cond2Cut1
-  orig_Cond2Cut2 <- Cond2Cut2
-
   # Categorical variables corresponding to the levels in conditioning variables
   # For the vertical conditioning variable, need in reverse order (plotting top to bottom, but
   # the bottom rows represent lower levels)
-  data$cond1_cat <- cutInterval(-cond1, -Cond1Cut1, -Cond1Cut2)
-  data$cond2_cat <- cutInterval(cond2, Cond2Cut1, Cond2Cut2)
-  data$cond1_cat <- assignLevels(data$cond1_cat)
-  data$cond2_cat <- assignLevels(data$cond2_cat)
+  data$cond1_cat <- cut_interval(-cond1, -Cond1Cut1, -Cond1Cut2) %>%
+    assign_levels()
 
-  # Data frame with the study variable, color assignment, and group (i.e. which panel) by region
-  cols <- data.frame(resp=resp, resp_col=factor(data$resp_cat,
-                                                labels=colorList(data$resp_cat, min(resp), max(resp), RespCut1, RespCut2)),
-                     group=paste0(data$cond1_cat,data$cond2_cat))
-  if (!is.null(data@plotOrder)) {
-    cols <- cols[data@plotOrder,]
+  attr(data$cond1_cat, "Cond1Cut1") <- Cond1Cut1
+  attr(data$cond1_cat, "Cond1Cut2") <- Cond1Cut2
+
+  data$cond2_cat <- cut_interval(cond2, Cond2Cut1, Cond2Cut2) %>%
+    assign_levels()
+
+  attr(data$cond2_cat, "Cond2Cut1") <- Cond2Cut1
+  attr(data$cond2_cat, "Cond2Cut2") <- Cond2Cut2
+
+
+
+  cols_df <- function(resp, resp_cat, cond1_cat, cond2_cat) {
+
+    palette <- attr(resp_cat, 'colors')
+
+    data.frame(resp = resp,
+               colors = as.character(factor(resp_cat, labels = palette)),
+               group = as.numeric(paste0(cond1_cat, cond2_cat)),
+               stringsAsFactors = F)
   }
 
-  # Setting up plots and layer groups
-  p <- vector(length=n)
-  for (i in 1:length(p)) {
-    p[i] <- l_plot(parent=tt)
-  }
 
-  g <- vector(length=n)
-  for (i in 1:length(g)) {
-    g[i] <- l_layer_group(p[i])
-  }
+  update_colors <- function(df) {
 
-  # Plots polygons
-  pols <- vector("list",length=n)
-  for (i in 1:length(pols)) {
-    pols[[i]] <- l_layer(p[i], parent=g[i], data, color="cornsilk", asSingleLayer=FALSE)
-    l_scaleto_world(p[i])
-  }
+    cols <- df
 
-  # Color according to study response category and panel assignment
-  for (k in 1:n) {
-    for (i in 1:length(slot(data, "polygons"))) {
-      for (j in 1:length(slot(data@polygons[[data@plotOrder[i]]], "Polygons"))) {
-        l_configure(c(p[k], pols[[k]][[i]][j]), color=ifelse((cols[i,3]==group[k]),
-                                                             as.character(cols[i,2]), "cornsilk"))
+    for (k in 1:n) {
+      for (i in 1:length(slot(data, "polygons"))) {
+        for (j in 1:length(slot(data@polygons[[data@plotOrder[i]]], "Polygons"))) {
+
+          l_configure(c(p[k], pols[[k]][[i]][j]),
+                      color = ifelse((cols$group[i] == group[k]), cols$colors[i], "cornsilk"))
+
+        }
       }
     }
   }
 
-  # Model value and R^2 label
-  r2 <- r2calc(resp[data@plotOrder], cols$group)
-  r2label <- tcl('label',l_subwin(tt,'r2label'), text=paste0("R^2: ", round(r2,2)))
 
-  modelvalues <- aggregate(cols$resp, by=list(cols$group), mean)
-  colnames(modelvalues) <- c("group", "resp")
+  update_labels <- function(df) {
+
+    r2 <- r2_calc(df$resp, df$group)
+    r2label <- tcl('label', l_subwin(tt,'r2label'), text = paste0("R^2: ", round(r2, 2)))
+
+    model_values <- attr(r2, 'model_values')
+
+
+    for (i in 1:n) {
+
+      match <- model_values[model_values$group == group[i], ]
+
+      if (nrow(match) == 1) {
+
+        fitted_r <- round(match[['fitted_value']], 2)
+
+        l_configure(c(p[i], plabel[i]), text = fitted_r)
+
+      } else {
+
+        l_configure(c(p[i], plabel[i]), text = "NA")
+
+      }
+    }
+
+  }
+
+
+  cols <- cols_df(resp = resp, resp_cat = data$resp_cat,
+                  cond1_cat = data$cond1_cat, cond2_cat = data$cond2_cat)
+
+  update_colors(cols)
+
+  # Model values and R^2 label
+  r2 <- r2_calc(cols$resp, cols$group)
+  r2label <- tcl('label', l_subwin(tt,'r2label'), text = paste0("R^2: ", round(r2, 2)))
+
+  model_values <- attr(r2, 'model_values')
+
 
   xcoord <- data@bbox[1,1] - 0.15
   ycoord <- data@bbox[2,1]
 
-  plabel <- vector(length=n)
-  for (i in 1:length(plabel)) {
-    if (length(modelvalues$resp[which(modelvalues$group==as.numeric(group[i]))])==1) {
-      plabel[i] <- l_layer_text(p[i],x=xcoord, y=ycoord,
-                                text=round(modelvalues$resp
-                                           [which(modelvalues$group==as.numeric(group[i]))],2),
-                                size=10, index="end", color="grey")
+  plabel <- vector(length = n)
+
+  for (i in 1:n) {
+
+    match <- model_values[model_values$group == group[i], ]
+
+    if (nrow(match) == 1) {
+
+      fitted_r <- round(match[['fitted_value']], 2)
+
+      plabel[i] <- l_layer_text(p[i], x = xcoord, y = ycoord,
+                                text = fitted_r,
+                                size = 10, index = "end", color = "grey")
+
     } else {
-      plabel[i] <- l_layer_text(p[i],x=xcoord, y=ycoord,
-                                text="NA", size=10, index="end", color="grey")
+
+      plabel[i] <- l_layer_text(p[i], x = xcoord, y = ycoord,
+                                text = "NA",
+                                size = 10, index = "end", color = "grey")
+
     }
+
     l_scaleto_world(p[i])
+
   }
+
 
   # Update function to be used on sliders
   updateGraph <- function() {
 
     RespCut1 <- as.numeric(tkcget(scaletop, "-min"))
     RespCut2 <- as.numeric(tkcget(scaletop, "-max"))
+
     Cond1Cut1 <- as.numeric(tkcget(scaleright, "-min"))
     Cond1Cut2 <- as.numeric(tkcget(scaleright, "-max"))
+
     Cond2Cut1 <- as.numeric(tkcget(scalebottom, "-min"))
     Cond2Cut2 <- as.numeric(tkcget(scalebottom, "-max"))
 
-    data$resp_cat <- cutInterval(resp, RespCut1, RespCut2)
-    data$cond1_cat <- cutInterval(-cond1, -Cond1Cut1, -Cond1Cut2)
-    data$cond2_cat <- cutInterval(cond2, Cond2Cut1, Cond2Cut2)
-    data$cond1_cat <- assignLevels(data$cond1_cat)
-    data$cond2_cat <- assignLevels(data$cond2_cat)
+    resp_cat <- cut_interval(resp, RespCut1, RespCut2)
+    attr(resp_cat, 'colors') <- assign_colors(min(resp), max(resp), RespCut1, RespCut2)
 
-    cols <- data.frame(resp=resp, resp_col=factor(data$resp_cat,
-                                                  labels=colorList(data$resp_cat, min(resp),
-                                                                   max(resp), RespCut1, RespCut2)),
-                       group=paste0(data$cond1_cat,data$cond2_cat))
-    if (!is.null(data@plotOrder)) {
-      cols <- cols[data@plotOrder,]
-    }
+    cond1_cat <- cut_interval(-cond1, -Cond1Cut1, -Cond1Cut2) %>%
+      assign_levels()
+    cond2_cat <- cut_interval(cond2, Cond2Cut1, Cond2Cut2) %>%
+      assign_levels()
 
-    for (k in 1:n) {
-      for (i in 1:length(slot(data, "polygons"))) {
-        for (j in 1:length(slot(data@polygons[[data@plotOrder[i]]], "Polygons"))) {
-          l_configure(c(p[k], pols[[k]][[i]][j]),
-                      color=ifelse((cols[i,3]==group[k]), as.character(cols[i,2]), "cornsilk"))
-        }
-      }
-    }
 
-    newr2 <- r2calc(cols$resp, cols$group)
-    tcl(r2label, 'configure', text=paste0("R^2: ", round(newr2,2)))
+    cols <- cols_df(resp = resp, resp_cat = resp_cat,
+                    cond1_cat = cond1_cat, cond2_cat = cond2_cat)
 
-    modelvalues <- aggregate(cols$resp, by=list(cols$group), mean)
-    colnames(modelvalues) <- c("group", "resp")
+    update_colors(cols)
+    update_labels(cols)
 
-    for (i in 1:n) {
-      if (sum(modelvalues$group==as.numeric(group[i]))==1) {
-        l_configure(c(p[i],plabel[i]),
-                    text=round(modelvalues$resp[which(modelvalues$group==as.numeric(group[i]))],2))
-      } else {
-        l_configure(c(p[i],plabel[i]), text="NA")
-      }
-    }
   }
+
 
   # Reset function to be used with the Reset button. Restores to initial slider settings when
   # the code was first ran
-  Reset <- function(RespCut1=orig_RespCut1, RespCut2=orig_RespCut2, Cond1Cut1=orig_Cond1Cut1,
-                    Cond1Cut2=orig_Cond1Cut2, Cond2Cut1=orig_Cond2Cut1, Cond2Cut2=orig_Cond2Cut2) {
+  Reset <- function(resp = resp, resp_cat, cond1_cat, cond2_cat) {
 
-    tcl(scaletop, 'configure', min=RespCut1, max=RespCut2)
-    tcl(scaleright, 'configure', min=Cond1Cut1, max=Cond1Cut2)
-    tcl(scalebottom, 'configure', min=Cond2Cut1, max=Cond2Cut2)
+    RespCut1 <- attr(resp_cat, 'RespCut1')
+    RespCut2 <- attr(resp_cat, 'RespCut2')
 
-    data$resp_cat <- cutInterval(resp, RespCut1, RespCut2)
-    data$cond1_cat <- cutInterval(-cond1, -Cond1Cut1, -Cond1Cut2)
-    data$cond2_cat <- cutInterval(cond2, Cond2Cut1, Cond2Cut2)
-    data$cond1_cat <- assignLevels(data$cond1_cat)
-    data$cond2_cat <- assignLevels(data$cond2_cat)
+    Cond1Cut1 <- attr(cond1_cat, 'Cond1Cut1')
+    Cond1Cut2 <- attr(cond1_cat, 'Cond1Cut2')
 
-    cols <- data.frame(resp=resp,
-                       resp_col=factor(data$resp_cat, labels=colorList(data$resp_cat, min(resp),
-                                                                       max(resp), RespCut1, RespCut2)),
-                       group=paste0(data$cond1_cat,data$cond2_cat))
-    if (!is.null(data@plotOrder)) {
-      cols <- cols[data@plotOrder,]
-    }
+    Cond2Cut1 <- attr(cond2_cat, 'Cond2Cut1')
+    Cond2Cut2 <- attr(cond2_cat, 'Cond2Cut2')
 
-    for (k in 1:n) {
-      for (i in 1:length(slot(data, "polygons"))) {
-        for (j in 1:length(slot(data@polygons[[data@plotOrder[i]]], "Polygons"))) {
-          l_configure(c(p[k], pols[[k]][[i]][j]),
-                      color=ifelse((cols[i,3]==group[k]), as.character(cols[i,2]), "cornsilk"))
-        }
-      }
-    }
+    tcl(scaletop, 'configure', min = RespCut1, max = RespCut2)
+    tcl(scaleright, 'configure', min = Cond1Cut1, max = Cond1Cut2)
+    tcl(scalebottom, 'configure', min = Cond2Cut1, max = Cond2Cut2)
 
-    newr2 <- r2calc(cols$resp, cols$group)
-    tcl(r2label, 'configure', text=paste0("R^2: ", round(newr2,2)))
 
-    modelvalues <- aggregate(cols$resp, by=list(cols$group), mean)
-    colnames(modelvalues) <- c("group", "resp")
+    cols <- cols_df(resp = resp, resp_cat = data$resp_cat,
+                    cond1_cat = data$cond1_cat, cond2_cat = data$cond2_cat)
 
-    for (i in 1:n) {
-      if (sum(modelvalues$group==as.numeric(group[i]))==1) {
-        l_configure(c(p[i],plabel[i]),
-                    text=round(modelvalues$resp[which(modelvalues$group==as.numeric(group[i]))],2))
-      } else {
-        l_configure(c(p[i],plabel[i]), text="NA")
-      }
-    }
+    update_colors(cols)
+    update_labels(cols)
+
   }
+
 
   # Creates sliders and slider labels
-  labelscaletop <- tcl('label',l_subwin(tt,'scalelabel_top'),text=respvar)
-  scaletop <- tcl('::minmax_scale2', l_subwin(tt, 'scaletop'), from=min(resp),
-                  to=max(resp),min=RespCut1, max=RespCut2, resolution=0.1,
-                  seg1col="blue", seg3col="red", orient="horizontal")
+  labelscaletop <- tcl('label', l_subwin(tt,'scalelabel_top'), text = respvar)
+  scaletop <- tcl('::minmax_scale2', l_subwin(tt, 'scaletop'),
+                  from = min(resp), to = max(resp),
+                  min = RespCut1, max = RespCut2,
+                  resolution = 0.1, orient = 'horizontal',
+                  seg1col = 'blue', seg3col = 'red')
 
-  labelscaleright <- tcl('label',l_subwin(tt,'scalelabel_right'),text=cond1var)
-  scaleright <- tcl('::minmax_scale2', l_subwin(tt, 'scaleright'), resolution=0.1,
-                    from=min(cond1), to=max(cond1),min=Cond1Cut1, max=Cond1Cut2, orient="vertical")
+  labelscaleright <- tcl('label', l_subwin(tt,'scalelabel_right'), text = cond1var)
+  scaleright <- tcl('::minmax_scale2', l_subwin(tt, 'scaleright'),
+                    from = min(cond1), to = max(cond1),
+                    min = Cond1Cut1, max = Cond1Cut2,
+                    resolution = 0.1, orient="vertical")
 
   labelscalebottom <- tcl('label',l_subwin(tt,'scalelabel_bottom'),text=cond2var)
-  scalebottom <- tcl('::minmax_scale2', l_subwin(tt, 'scalebottom'), resolution=0.1,
-                     from=min(cond2), to=max(cond2), min=Cond2Cut1, max=Cond2Cut2, orient="horizontal")
+  scalebottom <- tcl('::minmax_scale2', l_subwin(tt, 'scalebottom'),
+                     from = min(cond2), to = max(cond2),
+                     min = Cond2Cut1, max = Cond2Cut2,
+                     resolution = 0.1, orient = "horizontal")
 
-  tcl(scaletop, 'configure', command=function(...)updateGraph())
-  tcl(scalebottom, 'configure', command=function(...)updateGraph())
-  tcl(scaleright, 'configure', command=function(...)updateGraph())
+  tcl(scaletop, 'configure', command = function(...) updateGraph())
+  tcl(scalebottom, 'configure', command = function(...) updateGraph())
+  tcl(scaleright, 'configure', command = function(...) updateGraph())
 
-  # Creates reset button
-  resetbutton <- tkbutton(tt, command=function(...)Reset(), text="Reset Sliders")
+
+  # Reset button
+  resetbutton <- tkbutton(tt,
+                          command = function(...) Reset(resp = resp,
+                                                        resp_cat = data$resp_cat,
+                                                        cond1_cat = data$cond1_cat,
+                                                        cond2_cat = data$cond2_cat),
+                          text = "Reset Sliders")
+
 
   # Layout
-  tkgrid(labelscaletop, row=0, column=0, sticky="e")
-  tkgrid(scaletop, row=0, column=1, sticky="new")
+  tkgrid(labelscaletop, row = 0, column = 0, sticky = "e")
+  tkgrid(scaletop, row = 0, column = 1, sticky = "new")
+
   for (i in 1:3) {
     for (j in 0:2) {
-      tkgrid(p[(i-1)*3+j+1], row=i, column=j, sticky="nesw")
+      tkgrid(p[(i-1)*3+j+1], row = i, column = j, sticky = "nesw")
     }
   }
 
-  tkgrid(labelscalebottom, row=4, column=0, sticky="e")
-  tkgrid(scalebottom, row=4, column=1, sticky="new")
-  tkgrid(labelscaleright, row=1, column=3, sticky="sew")
-  tkgrid(scaleright, row=2, column=3, rowspan=2, sticky="new")
-  tkgrid(r2label, row=4, column=3, sticky="nesw")
-  tkgrid(resetbutton, row=4, column=0)
+  tkgrid(labelscalebottom, row = 4, column = 0, sticky = "e")
+  tkgrid(scalebottom, row = 4, column = 1, sticky = "new")
+  tkgrid(labelscaleright, row = 1, column = 3, sticky = "sew")
+  tkgrid(scaleright, row = 2, column = 3, rowspan = 2, sticky = "new")
+  tkgrid(r2label, row = 4, column = 3, sticky="nesw")
+  tkgrid(resetbutton, row = 4, column = 0)
 
-  tkgrid.columnconfigure(tt, 3, weight=6)
-  tkgrid.rowconfigure(tt, 0, weight=4)
-  tkgrid.rowconfigure(tt, 4, weight=4)
-  for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight=5) }
-  for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight=5) }
+  tkgrid.columnconfigure(tt, 3, weight = 6)
+  tkgrid.rowconfigure(tt, 0, weight = 4)
+  tkgrid.rowconfigure(tt, 4, weight = 4)
+
+  for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight = 5) }
+  for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight = 5) }
 
 }
 
@@ -859,9 +915,9 @@ cut_interval <- function(x, cut_lwr, cut_upr) {
 #' Renames the levels for a vector of factors levels from '1' up to '3'
 #'   depending on the number of existing levels in use
 #'
-assign_level <- function(x) {
+assign_levels <- function(x) {
 
-  x <- droplevels(x)
+  if (is.factor(x)) x <- droplevels(x)
 
   factor(x, labels = 1:nlevels(x))
 
@@ -872,40 +928,52 @@ assign_level <- function(x) {
 #'   not be three categories for the study variable (e.g. when the first and
 #'   second break point are equal)
 #'
-assign_colors <- function(x, min, max, cut1, cut2) {
+assign_colors <- function(min, max, cut1, cut2) {
 
-  levels(x) <- levels(droplevels(x))
+  if (length(unique(c(min, max, cut1, cut2))) == 4) {
 
-  if (nlevels(x)==3) {
-    c("blue","grey","red")
-  } else if (nlevels(x)==2) {
-    if (min==cut1) { c("grey","red") }
-    else if (max==cut2) { c("blue","grey") }
-    else if (cut1==cut2) { c("blue","red") }
+    c('blue', 'grey', 'red')
+
+  } else if (length(unique(c(min, max, cut1, cut2))) == 3) {
+
+    if (min == cut1) c('grey', 'red')
+    else if (max == cut2) c('blue', 'grey')
+    else if (cut1 == cut2) c('blue', 'red')
+
   } else {
-    if (min==cut2) c("red")
-    else if (max==cut1) c("blue")
-    else c("grey")
+
+    if (min == cut2) 'red'
+    else if (max == cut1) 'blue'
+    else 'grey'
+
   }
+
 }
 
 
 #' Calculates R^2 given the study variable values and the panel assignment
 #'   based on the conditioning variables
 #'
-#' @importFrom dplyr %>% group_by mutate ungroup summarise
+#' @importFrom dplyr group_by mutate ungroup summarise select
+#' @importFrom magrittr %>%
 #'
-r2 <- function(x, group) {
+r2_calc <- function(x, group) {
 
   overall_mean <- mean(x)
 
   df <- data.frame(act_value = x, group = group) %>%
     group_by(group) %>%
     mutate(fitted_value = mean(act_value)) %>%
-    ungroup() %>%
-    summarise(r2 = sum((fitted_value - overall_mean)^2)/sum((act_value - overall_mean)^2))
+    ungroup()
 
-  as.numeric(df)
+
+  r2 <- df %>%
+    summarise(sum((fitted_value - overall_mean)^2)/sum((act_value - overall_mean)^2)) %>%
+    as.numeric()
+
+  attr(r2, 'model_values') <- df %>% select(-act_value) %>% unique()
+
+  r2
 
 }
 
@@ -914,52 +982,59 @@ r2 <- function(x, group) {
 #'   on the two conditioning variables, and returns the results in a data.frame
 #'   sorted in decreasing order by the R^2
 #'
-r2_optimize <- function(otry, data, resp, cond1, cond2) {
-
-  overall_mean <- mean(resp)
+#' @importFrom dplyr arrange transmute mutate_all rowwise
+#' @importFrom magrittr %>%
+#'
+r2_optimize <- function(otry, resp, cond1, cond2) {
 
   # otry number of values to try for each conditioning variable. Picks {otry choose 2} pairs (since
   # order doesn't matter) of points as the middle two break points for partioning, as well as
-  # cases where the two middle break points are equal.
-  cond1combn <- cbind(combn(seq(min(cond1), max(cond1), length.out = otry), 2),
-                      matrix(rep(seq(min(cond1), max(cond1), length.out = otry), times = 2),
-                             nrow = 2, byrow = T))
+  # cases where the two middle break points are equal
+  cond1_seq <- seq(min(cond1), max(cond1), length.out = otry)
 
-  cond2combn <- cbind(combn(seq(min(cond2), max(cond2), length.out = otry), 2),
-                      matrix(rep(seq(min(cond2), max(cond2), length.out = otry), times = 2),
-                             nrow = 2, byrow = T))
+  cond1_combn <- cbind(combn(cond1_seq, m = 2),
+                       matrix(rep(cond1_seq, times = 2), nrow = 2, byrow = T))
 
-  r2combn <- data.frame(numeric(), numeric(), numeric(), numeric(), numeric())
+  cond1_combn_str <- apply(cond1_combn, 2, function(x) paste0(x, collapse = ', '))
 
-  # Assigns groupings based on new combination of partioning points, and saves the corresponding
-  # R^2.
-  for (i in 1:ncol(cond1combn)) {
-    for (j in 1:ncol(cond2combn)) {
 
-      Cond1Cut1 <- cond1combn[1,i]
-      Cond1Cut2 <- cond1combn[2,i]
-      Cond2Cut1 <- cond2combn[1,j]
-      Cond2Cut2 <- cond2combn[2,j]
+  cond2_seq <- seq(min(cond2), max(cond2), length.out = otry)
 
-      data$cond1_cat <- cutInterval(-cond1, -Cond1Cut1, -Cond1Cut2)
-      data$cond2_cat <- cutInterval(cond2, Cond2Cut1, Cond2Cut2)
-      data$cond1_cat <- assignLevels(data$cond1_cat)
-      data$cond2_cat <- assignLevels(data$cond2_cat)
+  cond2_combn <- cbind(combn(cond2_seq, 2),
+                       matrix(rep(cond2_seq, times = 2), nrow = 2, byrow = T))
 
-      gr <- data.frame(group=paste0(data$cond1_cat,data$cond2_cat))
-      if (!is.null(data@plotOrder)) {
-        gr <- gr[data@plotOrder,]
-      }
+  cond2_combn_str <- apply(cond2_combn, 2, function(x) paste0(x, collapse = ', '))
 
-      r2 <- r2calc(resp[data@plotOrder], gr)
-      r2combn <- rbind(r2combn, data.frame(Cond1Cut1, Cond1Cut2, Cond2Cut1, Cond2Cut2, r2))
-    }
-  }
-  colnames(r2combn) <- c("cond1cut1", "cond1cut2", "cond2cut1", "cond2cut2", "rsquared")
 
-  r2combn <- r2combn[order(r2combn$rsquared, decreasing=TRUE), ]
+  r2_df <- expand.grid(cond1_combn_str, cond2_combn_str, stringsAsFactors = F) %>%
+    rowwise() %>%
+    transmute(cond1cut1 = unlist(strsplit(Var1, ', '))[1],
+              cond1cut2 = unlist(strsplit(Var1, ', '))[2],
+              cond2cut1 = unlist(strsplit(Var2, ', '))[1],
+              cond2cut2 = unlist(strsplit(Var2, ', '))[2]) %>%
+    mutate_all(as.numeric)
 
+  r2s <- Map(function(resp, cond1, cond2, cond1cut1, cond1cut2, cond2cut1, cond2cut2) {
+
+    cond1_cat <- cut_interval(-cond1, -cond1cut1, -cond1cut2) %>%
+      assign_levels()
+
+    cond2_cat <- cut_interval(cond2, cond2cut1, cond2cut2) %>%
+      assign_levels()
+
+    gr <- paste0(cond1_cat, cond2_cat)
+
+    # if (!is.null(data@plotOrder)) gr <- gr[data@plotOrder, ]
+
+    r2_calc(resp, gr)
+
+  }, list(resp), list(cond1), list(cond2), r2_df$cond1cut1, r2_df$cond1cut2, r2_df$cond2cut1, r2_df$cond2cut2)
+
+  r2_df$r2 <- unlist(r2s)
+
+  r2_df %>%
+    arrange(desc(r2)) %>%
+    data.frame()
 
 }
-
 
