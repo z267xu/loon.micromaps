@@ -61,7 +61,7 @@ library(rgdal)
 nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
 
 proj4string(nc.sids) <- CRS("+proj=longlat +ellps=clrk66")
-row.names(nc.sids) <- as.character(nc$FIPSNO)
+row.names(nc.sids) <- as.character(nc.sids$FIPSNO)
 
 nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) +
                                   sqrt((nc.sids$SID74+1)/nc.sids$BIR74))

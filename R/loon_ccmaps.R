@@ -465,7 +465,7 @@
 #' nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
 #'
 #' proj4string(nc.sids) <- CRS("+proj=longlat +ellps=clrk66")
-#' row.names(nc.sids) <- as.character(nc$FIPSNO)
+#' row.names(nc.sids) <- as.character(nc.sids$FIPSNO)
 #'
 #' nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) +
 #'                                   sqrt((nc.sids$SID74+1)/nc.sids$BIR74))
@@ -595,30 +595,25 @@ l_ccmaps <- function(data,
   group <- c(t(outer(1:3, 1:3, FUN = 'paste0')))
 
 
-  # Setting up plots and layer groups
+  # Setting up plots, layer groups and maps
   p <- vector(length = n)
-
-  for (i in 1:n) {
-    p[i] <- l_plot(parent = tt)
-  }
 
   g <- vector(length = n)
 
-  for (i in 1:n) {
-    g[i] <- l_layer_group(p[i])
-  }
-
-
-  # Plotting polygons
   pols <- vector("list",length = n)
 
   for (i in 1:n) {
 
-    pols[[i]] <- l_layer(p[i], parent = g[i], data, color = "cornsilk", asSingleLayer = FALSE)
+    p[i] <- l_plot(parent = tt)
+
+    g[i] <- l_layer_group(p[i])
+
+    pols[[i]] <- l_layer(p[i], parent = g[i],
+                         data, color = "cornsilk", asSingleLayer = FALSE)
+
     l_scaleto_world(p[i])
 
   }
-
 
 
   # If break points not given, use default of equal quantiles. Otherwise, use user-defined
