@@ -10,18 +10,27 @@ data("edPov")
 grouping <- 8
 ord.by <- 'pov'
 
-n <- nrow(edPov)
-n_groups <- ceiling(nrow(edPov)/grouping)
-edPov <- edPov[order(edPov$pov, decreasing = T), ]
-edPov$group <- rep(1:n_groups, each = grouping)[1:n]
 
 USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb', sort = F)
-# USstates@data <- USstates@data[USstates@plotOrder, ]
-
 USstates@data$NAME <- USstates@data$ST_NAME
 
+
+n <- nrow(edPov)
+n_groups <- ceiling(nrow(edPov)/grouping)
+
+USstates@data$id <- 1:nrow(USstates@data)
+
+
+sort_df <- USstates@data[, c('id', ord.by)]
+sort_df <- sort_df %>%
+  arrange(-pov) %>%
+  mutate(linkingKey = 0:(n-1)) %>%
+  mutate(grouping = linkingKey %/% grouping + 1) %>%
+  select(-pov)
+
+USstates@data <- merge(USstates@data, sort_df, by = 'id', sort = F)
+
 df <- USstates@data
-df$id <- 1:nrow(df)
 
 
 # Some regions have subpolygons - this provides a key to map between the polygons and regions
@@ -31,7 +40,6 @@ plotorder_f <- Map(function(x) {
   rep(x, times = n)
 
 }, USstates@plotOrder) %>% unlist()
-
 
 mapping <- data.frame(sort_key = plotorder_f)
 
@@ -43,23 +51,20 @@ tktitle(tt) <- 'Micromaps'
 rng <- range(df$pov)
 palette <- loon_palette(grouping)
 
-
 p_stat <- vector(length = n_groups)
 
 p_map_base <- vector(length = n_groups)
 p_map <- vector('list', length = n_groups)
 
-
 p_label <- vector(length = n_groups)
 p_label_txt <- vector(length = n_groups)
-
 
 mapping <- vector('list', length = n_groups)
 mapping_scat2map <- vector('list', length = n_groups)
 mapping_map2scat <- vector('list', length = n_groups)
-b <- vector(length = n_groups)
-b2 <- vector(length = n_groups)
-b3 <- vector(length = n_groups)
+b_scat2map <- vector(length = n_groups)
+b_map2scat <- vector(length = n_groups)
+b_unselmap <- vector(length = n_groups)
 
 # Create plots
 for (i in 1:n_groups) {
@@ -74,10 +79,12 @@ for (i in 1:n_groups) {
                       x = data$pov,
                       y = seq(grouping, grouping - nrow(data) + 1),
                       color = palette[1:nrow(data)],
-                      size = 6)
+                      size = 6,
+                      linkingKey = data$linkingKey,
+                      linkingGroup = 'micromap')
 
   l_configure(p_stat[i],
-              panX = rng[1] - 1, zoomX = 1, deltaX = diff(rng)*1.1,
+              panX = rng[1]*0.9, zoomX = 1, deltaX = diff(rng)*1.1,
               panY = 0, zoomY = 1, deltaY = grouping + 1,
               xlabel = '', ylabel = '')
 
@@ -86,34 +93,24 @@ for (i in 1:n_groups) {
   p_map_base[i] <- l_plot(parent = tt)
 
   p_map[[i]] <- l_layer(p_map_base[i],
-                      USstates,
-                      color = 'cornsilk',
-                      asSingleLayer = TRUE,
-                      label = 'map')
+                        USstates,
+                        color = 'cornsilk',
+                        asSingleLayer = TRUE,
+                        label = 'map')
 
   l_scaleto_world(p_map_base[i])
 
 
-  cols <- data.frame(ST = df$ST, key = 1:nrow(df), colors = NA, stringsAsFactors = F)
+  cols <- data.frame(ST = df$ST, key = df$id, colors = NA, stringsAsFactors = F)
 
   cols$colors <- data$colors[match(cols$ST, data$ST)]
   cols$colors[is.na(cols$colors)] <- 'cornsilk'
 
   mapping[[i]] <- data.frame(sort_key = plotorder_f,
-                           colors = cols$colors[match(plotorder_f, cols$key)],
-                           stringsAsFactors = F)
+                             colors = cols$colors[match(plotorder_f, cols$key)],
+                             stringsAsFactors = F)
 
   l_configure(c(p_map_base[i], p_map[[i]]), color = mapping[[i]]$colors)
-
-
-  # for (j in 1:length(slot(USstates, "polygons"))) {
-  #   for (k in 1:length(slot(USstates@polygons[[USstates@plotOrder[j]]], "Polygons"))) {
-  #
-  #     l_configure(c(p_map_base[i], p_map[i][[j]][k]),
-  #                 color = cols$colors[j])
-  #
-  #   }
-  # }
 
 
   # Labels
@@ -121,7 +118,9 @@ for (i in 1:n_groups) {
                        x = rep(1, nrow(data)),
                        y = seq(grouping, grouping - nrow(data) + 1),
                        color = palette[1:nrow(data)],
-                       size = 6)
+                       size = 6,
+                       linkingKey = data$linkingKey,
+                       linkingGroup = 'micromap')
 
   l_configure(p_label[i], panX = 0, zoomX = 1, deltaX = 6,
               panY = 0, zoomY = 1, deltaY = grouping + 1,
@@ -139,8 +138,6 @@ for (i in 1:n_groups) {
   mapping_scat2map[[i]] <- lapply(data$NAME, function(x) which(attr(p_map[[i]], 'NAME') == x))
   names(mapping_scat2map[[i]]) <- data$NAME
 
-  # mapping_map2scat <- sapply(attr(p_map, 'NAME'), function(x) which(data$NAME == x))
-  # mapping_map2scat <- Filter(function(x) length(x) > 0, mapping_map2scat)
 
   mapping_map2scat[[i]] <- match(attr(p_map[[i]], 'NAME'), data$NAME)
 
@@ -158,7 +155,7 @@ for (i in 1:n_groups) {
 
   }
 
-  assign_b <- function(i) {
+  assign_b_scat2map <- function(i) {
 
     force(i)
 
@@ -166,7 +163,7 @@ for (i in 1:n_groups) {
 
   }
 
-  b[i] <- assign_b(i)
+  b_scat2map[i] <- assign_b_scat2map(i)
 
 
   updatePlot_sp <- function(add, i) {
@@ -194,7 +191,7 @@ for (i in 1:n_groups) {
 
   }
 
-  assign_b2 <- function(i) {
+  assign_b_map2scat <- function(i) {
 
     force(i)
 
@@ -203,9 +200,9 @@ for (i in 1:n_groups) {
 
   }
 
-  b2[i] <- assign_b2(i)
+  b_map2scat[i] <- assign_b_map2scat(i)
 
-  assign_b3 <- function(i) {
+  assign_b_unselmap <- function(i) {
 
     force(i)
 
@@ -214,9 +211,12 @@ for (i in 1:n_groups) {
 
   }
 
-  b3[i] <- assign_b3(i)
+  b_unselmap[i] <- assign_b_unselmap(i)
 
 }
+
+
+b_xmove <- do.call('bind_zoompandelta', c(direction = 'x', as.list(p_stat)))
 
 
 # Layout
@@ -246,3 +246,4 @@ for (jj in 0:2) {
 
 }
 
+l_resize(tt, 1000, 800)
