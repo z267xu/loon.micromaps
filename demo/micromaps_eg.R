@@ -9,6 +9,7 @@ data("edPov")
 # Pre-processing
 grouping <- 8
 ord.by <- 'pov'
+var2 <- 'ed'
 
 
 USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb', sort = F)
@@ -41,17 +42,17 @@ plotorder_f <- Map(function(x) {
 
 }, USstates@plotOrder) %>% unlist()
 
-mapping <- data.frame(sort_key = plotorder_f)
-
 
 # Set up loon
 tt <- tktoplevel()
 tktitle(tt) <- 'Micromaps'
 
-rng <- range(df$pov)
+rng1 <- range(df$pov)
+rng2 <- range(df$ed)
 palette <- loon_palette(grouping)
 
-p_stat <- vector(length = n_groups)
+p_stat1 <- vector(length = n_groups)
+p_stat2 <- vector(length = n_groups)
 
 p_map_base <- vector(length = n_groups)
 p_map <- vector('list', length = n_groups)
@@ -64,7 +65,7 @@ mapping_scat2map <- vector('list', length = n_groups)
 mapping_map2scat <- vector('list', length = n_groups)
 b_scat2map <- vector(length = n_groups)
 b_map2scat <- vector(length = n_groups)
-b_unselmap <- vector(length = n_groups)
+b_map2scat_add <- vector(length = n_groups)
 
 # Create plots
 for (i in 1:n_groups) {
@@ -75,16 +76,30 @@ for (i in 1:n_groups) {
 
 
   # Scatterplot
-  p_stat[i] <- l_plot(parent = tt,
-                      x = data$pov,
-                      y = seq(grouping, grouping - nrow(data) + 1),
-                      color = palette[1:nrow(data)],
-                      size = 6,
-                      linkingKey = data$linkingKey,
-                      linkingGroup = 'micromap')
+  p_stat1[i] <- l_plot(parent = tt,
+                       x = data$pov,
+                       y = seq(grouping, grouping - nrow(data) + 1),
+                       color = palette[1:nrow(data)],
+                       size = 6,
+                       linkingKey = data$linkingKey,
+                       linkingGroup = 'micromap')
 
-  l_configure(p_stat[i],
-              panX = rng[1]*0.9, zoomX = 1, deltaX = diff(rng)*1.1,
+  l_configure(p_stat1[i],
+              panX = rng1[1]*0.9, zoomX = 1, deltaX = diff(rng1)*1.1,
+              panY = 0, zoomY = 1, deltaY = grouping + 1,
+              xlabel = '', ylabel = '')
+
+
+  p_stat2[i] <- l_plot(parent = tt,
+                       x = data$ed,
+                       y = seq(grouping, grouping - nrow(data) + 1),
+                       color = palette[1:nrow(data)],
+                       size = 6,
+                       linkingKey = data$linkingKey,
+                       linkingGroup = 'micromap')
+
+  l_configure(p_stat2[i],
+              panX = rng2[1]*0.9, zoomX = 1, deltaX = diff(rng2)*1.1,
               panY = 0, zoomY = 1, deltaY = grouping + 1,
               xlabel = '', ylabel = '')
 
@@ -141,109 +156,107 @@ for (i in 1:n_groups) {
 
   mapping_map2scat[[i]] <- match(attr(p_map[[i]], 'NAME'), data$NAME)
 
-  updateMap_sp <- function(i) {
-
-    sel <- l_cget(p_stat[i], 'selected')
-
-    j <- unlist(mapping_scat2map[[i]][sel])
-
-    orig_cols <- mapping[[i]]$colors
-    new_cols <- orig_cols
-    new_cols[j] <- 'magenta'
-
-    l_configure(p_map[[i]], color = new_cols)
-
-  }
-
-  assign_b_scat2map <- function(i) {
-
-    force(i)
-
-    l_bind_state(p_stat[i], 'selected', function() updateMap_sp(i))
-
-  }
-
-  b_scat2map[i] <- assign_b_scat2map(i)
-
-
-  updatePlot_sp <- function(add, i) {
-
-    j <- l_currentindex(p_map_base[i])
-
-    if(j !=-1 && !is.na(mapping_map2scat[[i]][j])) {
-
-      if (add) {
-
-        l_configure(p_stat[i], selected = TRUE, which = mapping_map2scat[[i]][j])
-
-      } else {
-
-        sel <- rep(FALSE, l_cget(p_stat[i], 'n'))
-        sel[mapping_map2scat[[i]][j]] <- TRUE
-        l_configure(p_stat[i], selected = sel)
-
-      }
-    } else {
-
-      l_configure(p_stat[i], selected = FALSE)
-
-    }
-
-  }
-
-  assign_b_map2scat <- function(i) {
-
-    force(i)
-
-    l_bind_item(p_map_base[i], paste0(p_map[[i]]), '<ButtonPress-1>',
-                function(){updatePlot_sp(FALSE, i)})
-
-  }
-
-  b_map2scat[i] <- assign_b_map2scat(i)
-
-  assign_b_unselmap <- function(i) {
-
-    force(i)
-
-    l_bind_item(p_map_base[i], paste0(p_map[[i]]), '<Shift-ButtonPress-1>',
-                function(){updatePlot_sp(TRUE, i)})
-
-  }
-
-  b_unselmap[i] <- assign_b_unselmap(i)
-
 }
 
 
-b_xmove <- do.call('bind_zoompandelta', c(direction = 'x', as.list(p_stat)))
+b_xmove1 <- do.call('bind_zoompandelta', c(direction = 'x', as.list(p_stat1)))
+b_xmove2 <- do.call('bind_zoompandelta', c(direction = 'x', as.list(p_stat2)))
+
+
+b_scat2map <- lapply(1:n_groups, function(x) {
+  bind_scat2map(s = p_stat1[x], m = p_map[[x]],
+                mapping = mapping_scat2map[[x]], orig_colors = mapping[[x]]$color)
+})
+
+b_map2scat <- lapply(1:n_groups, function(x) {
+  bind_map2scat(s = p_stat1[x], m = p_map[[x]], m_base = p_map_base[x],
+                mapping = mapping_map2scat[[x]])
+})
+
+
+b_map2scat_add <- lapply(1:n_groups, function(x) {
+  bind_map2scat_add(s = p_stat1[x], m = p_map[[x]], m_base = p_map_base[x],
+                    mapping = mapping_map2scat[[x]])
+})
+
+
+
+# Label axis at the bottom
+xs <- c(seq(0.2, 0.8, by = 0.2), 0.5)
+xs1_t <- round(xs*(diff(rng1)*1.1) + rng1[1]*0.9, 1)
+
+p_scale1 <- l_plot(parent = tt,
+                   x = xs1_t,
+                   y = c(rep(0.8, 4), 0.4), color = 'black',
+                   showScales = F, showLabels = F)
+
+l_configure(p_scale1,
+            panX = rng1[1]*0.9, zoomX = 1, deltaX = diff(rng1)*1.1,
+            panY = 0, zoomY = 1, deltaY = 1,
+            background = 'gray95')
+
+
+p_glyph1 <- l_glyph_add_text(p_scale1, text = as.character(c(xs1_t[1:4], 'Percent')))
+p_scale1['glyph'] <- p_glyph1
+
+
+
+xs2_t <- round(xs*(diff(rng2)*1.1) + rng2[1]*0.9, 1)
+
+
+p_scale2 <- l_plot(parent = tt,
+                   x = xs2_t,
+                   y = c(rep(0.8, 4), 0.4), color = 'black',
+                   showScales = F, showLabels = F)
+
+l_configure(p_scale2,
+            panX = rng2[1]*0.9, zoomX = 1, deltaX = diff(rng2)*1.1,
+            panY = 0, zoomY = 1, deltaY = 1,
+            background = 'gray95')
+
+
+p_glyph2 <- l_glyph_add_text(p_scale2, text = as.character(c(xs2_t[1:4], 'Percent')))
+p_scale2['glyph'] <- p_glyph2
+
+
+
 
 
 # Layout
 label_lab <- tcl('label', l_subwin(tt,'label_for_labels'), text = 'States')
-stat_lab <- tcl('label', l_subwin(tt,'label_for_stat_plots'), text = 'Percent Families Living Below Poverty Level')
+stat1_lab <- tcl('label', l_subwin(tt,'label_for_stat_plots'), text = 'Poverty Rate')
+stat2_lab <- tcl('label', l_subwin(tt,'label_for_stat_plots'), text = 'Education Rate')
 map_lab <- tcl('label', l_subwin(tt,'label_for_maps'), text = 'Map')
 
 
 tkgrid(label_lab, row = 0, column = 0, sticky = "nesw")
-tkgrid(stat_lab, row = 0, column = 1, sticky = "nesw")
-tkgrid(map_lab, row = 0, column = 2, sticky = "nesw")
+tkgrid(stat1_lab, row = 0, column = 1, sticky = "nesw")
+tkgrid(stat2_lab, row = 0, column = 2, sticky = "nesw")
+tkgrid(map_lab, row = 0, column = 3, sticky = "nesw")
 
 
 for (ii in 1:n_groups) {
 
   tkgrid(p_label[ii], row = ii, column = 0, sticky = 'nesw')
-  tkgrid(p_stat[ii], row = ii, column = 1, sticky = 'nesw')
-  tkgrid(p_map_base[ii], row = ii, column = 2, sticky = 'nesw')
+  tkgrid(p_stat1[ii], row = ii, column = 1, sticky = 'nesw')
+  tkgrid(p_stat2[ii], row = ii, column = 2, sticky = 'nesw')
+  tkgrid(p_map_base[ii], row = ii, column = 3, sticky = 'nesw')
 
-  tkgrid.rowconfigure(tt, ii, weight = 4)
+  tkgrid.rowconfigure(tt, ii, weight = 2)
+
+}
+
+for (jj in 0:3) {
+
+  tkgrid.columnconfigure(tt, jj, weight = 2)
 
 }
 
-for (jj in 0:2) {
+tkgrid(p_scale1, row = n_groups + 1, column = 1, sticky = 'news')
+tkgrid.rowconfigure(tt, n_groups + 1, weight = 3, minsize = 30)
 
-  tkgrid.columnconfigure(tt, jj, weight = 5)
-
-}
+tkgrid(p_scale2, row = n_groups + 1, column = 2, sticky = 'news')
+tkgrid.rowconfigure(tt, n_groups + 1, weight = 3, minsize = 30)
 
 l_resize(tt, 1000, 800)
+
