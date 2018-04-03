@@ -139,6 +139,45 @@ bind_map2scat_add <- function(s, m, m_base, mapping) {
 }
 
 
-# disable zooming/panning/delta
+#' Disable zooming, panning and delta in the x and/or y direction for a list of widgets
+#'
+#' @export
+#'
+disable_zoompandelta <- function(direction = c('x', 'y', 'xy'), ...) {
 
+  p <- list(...)
+
+
+  if (grepl('x', direction)) {
+
+    lapply(p, function(x) {
+
+      zoomX_val <- l_cget(x, 'zoomX')
+      panX_val <- l_cget(x, 'panX')
+      deltaX_val <- l_cget(x, 'deltaX')
+
+      l_bind_state(x, c('zoomX', 'panX', 'deltaX'), function(W) l_configure(W, zoomX = zoomX_val,
+                                                                            panX = panX_val, deltaX = deltaX_val))
+
+    })
+
+  }
+
+
+  if (grepl('y', direction)) {
+
+    lapply(p, function(x) {
+
+      zoomY_val <- l_cget(x, 'zoomY')
+      panY_val <- l_cget(x, 'panY')
+      deltaY_val <- l_cget(x, 'deltaY')
+
+      l_bind_state(x, c('zoomY', 'panY', 'deltaY'), function(W) l_configure(W, zoomY = zoomY_val,
+                                                                            panY = panY_val, deltaY = deltaY_val))
+
+    })
+
+  }
+
+}
 

@@ -4,8 +4,9 @@
 \alias{l_micromaps}
 \title{Micromaps in loon}
 \usage{
-l_micromaps(spdf, labels, grouping = 5, ord.var, ord.var.axis, ord.var.label,
-  var2 = NULL, var2.axis = NULL, var2.label = NULL, map.label = "Map",
+l_micromaps(tt = tktoplevel(), var_inspector = TRUE, spdf, labels,
+  grouping = 5, ord.var, ord.var.axis, ord.var.label = NULL, var2 = NULL,
+  var2.axis = NULL, var2.label = NULL, map.label = "Map",
   lab.label = "Labels", title = "Micromaps")
 }
 \description{
@@ -35,10 +36,10 @@ lab.label <- 'States'
 
 states <- USstates@data$ST_NAME
 
-l_micromaps(spdf = USstates, labels = states, grouping = grouping,
-               ord.var = ord.var, ord.var.axis = ord.var.axis, ord.var.label = ord.var.label,
-               var2 = var2, var2.axis = var2.axis, var2.label = var2.label,
-               lab.label = lab.label)
+mm <- l_micromaps(spdf = USstates, labels = states, grouping = grouping,
+                  ord.var = ord.var, ord.var.axis = ord.var.axis, ord.var.label = ord.var.label,
+                  var2 = var2, var2.axis = var2.axis, var2.label = var2.label,
+                  lab.label = lab.label)
 
 }
 }
