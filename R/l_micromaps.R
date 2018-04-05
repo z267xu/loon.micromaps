@@ -53,6 +53,15 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   if (is.null(ord.var.label) | identical(ord.var.label, '')) ord.var.label <- ord.var
   if ((is.null(var2.label) | identical(var2.label, '')) & !is.null(var2)) var2.label <- var2
 
+
+
+  delta <- function(rng, zoom = 1, scale) {
+
+    ((rng[2] - scale*rng[1])/(diff(rng)*zoom)) * 1.01
+
+  }
+
+
   # Data pre-processing
   fontsize <- 6
   dotsize <- 4
@@ -131,7 +140,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                          linkingGroup = 'micromap')
 
     l_configure(p_scat1[i],
-                panX = rng1[1] * 0.9, zoomX = 1, deltaX = diff(rng1) * 1.1,
+                panX = rng1[1] * 0.98, zoomX = 1, deltaX = diff(rng1)*delta(rng1, scale = 0.98),
                 panY = 0, zoomY = 1, deltaY = grouping + 1,
                 showLabels = T, xlabel = '', ylabel = '')
 
@@ -147,7 +156,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                            linkingGroup = 'micromap')
 
       l_configure(p_scat2[i],
-                  panX = rng2[1] * 0.9, zoomX = 1, deltaX = diff(rng2) * 1.1,
+                  panX = rng2[1] * 0.98, zoomX = 1, deltaX = diff(rng2)*delta(rng2, scale = 0.98),
                   panY = 0, zoomY = 1, deltaY = grouping + 1,
                   showLabels = T, xlabel = '', ylabel = '')
 
@@ -207,8 +216,8 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
   # Label axis for scatterplots
   xs <- seq(0.2, 0.8, by = 0.2)
-  xs1_t <- round(xs * (diff(rng1) * 1.1) + rng1[1] * 0.9, 1)
-  xlim1 <- c(0, 1) * (diff(rng1) * 1.1) + rng1[1] * 0.9
+  xs1_t <- round(xs * (diff(rng1) * 1.01) + rng1[1] * 0.98, 1)
+  xlim1 <- c(0, 1) * (diff(rng1) * 1.01) + rng1[1] * 0.98
   axis_txt1 <- sprintf('%.1f', xs1_t)
 
   p_scale1 <- l_plot(parent = tt,
@@ -216,7 +225,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                      color = 'black')
 
   l_configure(p_scale1,
-              panX = rng1[1] * 0.9, zoomX = 1, deltaX = diff(rng1) * 1.1,
+              panX = rng1[1] * 0.98, zoomX = 1, deltaX = diff(rng1)*delta(rng1, scale = 0.98),
               panY = 0, zoomY = 1, deltaY = 1,
               background = 'gray95', foreground = 'gray95', # Ensures same color as background
               showLabels = T, xlabel = '', ylabel = '',
@@ -238,10 +247,11 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   p_scale1['glyph'] <- p_glyph1
 
 
+
   if (!is.null(var2)) {
 
-    xs2_t <- round(xs * (diff(rng2) * 1.1) + rng2[1] * 0.9, 1)
-    xlim2 <- c(0, 1) * (diff(rng2) * 1.1) + rng2[1] * 0.9
+    xs2_t <- round(xs * (diff(rng2) * 1.01) + rng2[1] * 0.98, 1)
+    xlim2 <- c(0, 1) * (diff(rng2) * 1.01) + rng2[1] * 0.98
     axis_txt2 <- sprintf('%.1f', xs2_t)
 
     p_scale2 <- l_plot(parent = tt,
@@ -249,7 +259,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                        color = 'black')
 
     l_configure(p_scale2,
-                panX = rng2[1] * 0.9, zoomX = 1, deltaX = diff(rng2) * 1.1,
+                panX = rng2[1] * 0.98, zoomX = 1, deltaX = diff(rng2)*delta(rng2, scale = 0.98),
                 panY = 0, zoomY = 1, deltaY = 1,
                 background = 'gray95', foreground = 'gray95',
                 showLabels = T, xlabel = '', ylabel = '',
