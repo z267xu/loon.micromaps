@@ -4,10 +4,11 @@
 \alias{l_micromaps}
 \title{Micromaps in loon}
 \usage{
-l_micromaps(tt = tktoplevel(), var_inspector = TRUE, spdf, labels,
-  grouping = 5, ord.var, ord.var.axis, ord.var.label = NULL, var2 = NULL,
-  var2.axis = NULL, var2.label = NULL, map.label = "Map",
-  lab.label = "Labels", title = "Micromaps")
+l_micromaps(tt = tktoplevel(), var_inspector = TRUE, spdf,
+  grouping = NULL, n_groups = NULL, map.label = "Map",
+  lab.label = "Labels", title = "Micromaps", variables = list(id.var =
+  NULL, ...), color = NULL, size = 6, linkingKey = NULL,
+  linkingGroup = NULL, sync = c("pull", "push"), ...)
 }
 \description{
 Micromaps in loon

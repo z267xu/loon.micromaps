@@ -25,26 +25,16 @@ cd_southon <- gSimplify(cd_southon, tol = 0.05) %>%
 cd_southon@data <- merge(cd_southon@data, canada_data,
                          all.x = T, all.y = F, by.y = 'id', by.x = 'CDUID')
 
-# Set parameters for micromaps
-grouping <- 7
 
-ord.var <- 'pct_immigrants'
-ord.var.axis <- 'Percent'
-ord.var.label <- '% Immigrant Population'
+# Micromaps
+mm <- l_micromaps(spdf = cd_southon,
+                  lab.label = 'Census Division',
+                  variables = list(id.var = 'CDNAME',
+                                   grouping.var = list(name = 'pct_immigrants', xlab = NULL, label = '% Immigrant Population'),
+                                   var2 = list(name = 'employ_rate_15plus', xlab = NULL, label = NULL),
+                                   var3 = list(name = 'pop_density', xlab = 'density')),
+                  glyph = 'square', linkingGroup = 'Southern_ON', sync = 'push')
 
-var2 <- 'employ_rate_15plus'
-var2.axis <- 'Percent'
-var2.label <- 'Employment Rate, 15 Years and Older'
-
-lab.label <- 'Census Divisions'
-
-cds <- cd_southon@data$CDNAME
-
-
-mm <- l_micromaps(spdf = cd_southon, labels = cds, grouping = grouping,
-                  ord.var = ord.var, ord.var.axis = ord.var.axis, ord.var.label = ord.var.label,
-                  var2 = var2, var2.axis = var2.axis, var2.label = var2.label,
-                  lab.label = lab.label)
 
 mm2 <- l_micromaps(spdf = cd_southon, labels = cds, grouping = grouping,
                    ord.var = ord.var, ord.var.axis = ord.var.axis, ord.var.label = ord.var.label,
