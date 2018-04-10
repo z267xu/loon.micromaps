@@ -1,4 +1,5 @@
 
+library(loon.micromaps)
 library(rgdal)
 library(rgeos)
 library(dplyr)
@@ -28,15 +29,10 @@ cd_southon@data <- merge(cd_southon@data, canada_data,
 
 # Micromaps
 mm <- l_micromaps(spdf = cd_southon,
-                  lab.label = 'Census Division',
+                  lab.label = 'Census Divisions',
                   variables = list(id.var = 'CDNAME',
                                    grouping.var = list(name = 'pct_immigrants', xlab = NULL, label = '% Immigrant Population'),
                                    var2 = list(name = 'employ_rate_15plus', xlab = NULL, label = NULL),
                                    var3 = list(name = 'pop_density', xlab = 'density')),
                   glyph = 'square', linkingGroup = 'Southern_ON', sync = 'push')
-
-
-mm2 <- l_micromaps(spdf = cd_southon, labels = cds, grouping = grouping,
-                   ord.var = ord.var, ord.var.axis = ord.var.axis, ord.var.label = ord.var.label,
-                   lab.label = lab.label)
 

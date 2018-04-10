@@ -103,7 +103,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   spdf@data$id <- 1:n
   spdf@data$NAME <- as.character(spdf@data[[id.var]])
 
-  grouping <- allocate_group(n_groups, grouping, n)
+  grouping <- allocate_group(n_groups = n_groups, grouping = grouping, n = n)
   n_groups <- length(grouping)
 
   group <- Map(function(x, y) {
@@ -111,13 +111,10 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   }, grouping, 1:n_groups) %>% unlist()
 
 
-
-  if (length(color) > 1 & length(color) != max(grouping)) {
-    stop(paste0('color, if specified, should be either a single value or a vector of values that matches the max number of elements per row of ', max(grouping)))
-  }
-
+  color_orig <- color
   if (is.null(color)) color <- loon_palette(max(grouping))
-  if (length(color) == 1) color <- rep(color, max(grouping))
+  if (!is.null(color) & !is.character(color)) stop('color, if specified, should consist of character values')
+  if (length(color) > 0) color <- rep(color, length.out = max(grouping))
 
 
   if (is.null(linkingKey)) linkingKey <- as.character(spdf@data$NAME)
@@ -452,7 +449,9 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
     n_groups_i <- tclVar(ifelse(is.null(n_groups), '', as.character(n_groups)))
     entry.n_groups <- tkentry(gr, textvariable = n_groups_i, width = 20)
-    grouping_i <- ifelse(is.null(grouping), '', paste0(grouping, collapse = ','))
+
+    grouping_char <- paste0(grouping, collapse = ',')
+    grouping_i <- tclVar(ifelse(is.null(grouping), '', grouping_char))
     entry.grouping <- tkentry(gr, textvariable = grouping_i, width = 20)
 
 
@@ -573,6 +572,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
     updatemm <- function() {
 
+
       grouping.var_new <- tclvalue(grouping.var_i)
       grouping.var.xlab_new <- tclvalue(grouping.var.xlab_i)
       grouping.var.label_new <- tclvalue(grouping.var.label_i)
@@ -590,8 +590,12 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
           trimws() %>% as.numeric()
       }
 
-      n_groups_new <- tclvalue(n_groups_i)
-      n_groups_new <- ifelse(identical(n_groups_new, ''), NULL, as.numeric(n_groups_new))
+      if (identical(tclvalue(n_groups_i), '')) {
+        n_groups_new <- NULL
+      } else {
+        n_groups_new <- as.numeric(tclvalue(n_groups_i))
+      }
+
 
       size_new <- as.numeric(tclvalue(currSize))
 
@@ -619,7 +623,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                   spdf = spdf, grouping = grouping_new, n_groups = n_groups_new,
                   variables = variables,
                   map.label = map.label, lab.label = lab.label, title = title,
-                  color = color, size = size_new,
+                  color = color_orig, size = size_new,
                   linkingKey = linkingKey, linkingGroup = linkingGroup, sync = sync, ...)
 
 
