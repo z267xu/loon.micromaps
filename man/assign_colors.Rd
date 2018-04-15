@@ -6,7 +6,7 @@
   not be three categories for the study variable (e.g. when the first and
   second break point are equal)}
 \usage{
-assign_colors(min, max, cut1, cut2)
+assign_colors(var, cuts, seg1col, seg2col, seg3col)
 }
 \description{
 Determines the colors to use for coloring regions. Needed since there might

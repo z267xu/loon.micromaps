@@ -4,13 +4,13 @@
 \alias{l_ccmaps}
 \title{Conditioned choropleth maps}
 \usage{
-l_ccmaps(data, respvar, cond1var, cond2var, respbreaks = 3,
-  optimize = FALSE, otry = 10, title = "CCmaps")
+l_ccmaps(tt = tktoplevel(), var_inspector = TRUE, spdf, respvar,
+  respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
+  cond2var.lab = NULL, respbreaks = 3, seg1col = "blue",
+  seg2col = "darkgrey", seg3col = "red", optimize = FALSE, otry = 10,
+  title = "CCmaps")
 }
 \arguments{
-\item{data}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
-including values for variables used for determining map coloring and panel positioning}
-
 \item{respvar}{character name of the response value variable}
 
 \item{cond1var}{character name of the first conditioning variable (controls
@@ -34,6 +34,9 @@ at the cost of longer computation time}
 
 \item{title}{character string of the title of the map. Appears in the title bar
 of the plot window. Defaults to "CCmaps"}
+
+\item{data}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
+including values for variables used for determining map coloring and panel positioning}
 }
 \description{
 2-way panel of maps for visualizing multivariate data analysis
@@ -48,7 +51,7 @@ library(rgdal)
 columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 
 ## Plot
-l_ccmaps(data = columbus,
+l_ccmaps(spdf = columbus,
          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
          optimize = TRUE,
          title = "Columbus Residential Burglaries and Vehicle Thefts")
@@ -63,17 +66,15 @@ nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verb
 proj4string(nc.sids) <- CRS("+proj=longlat +ellps=clrk66")
 row.names(nc.sids) <- as.character(nc.sids$FIPSNO)
 
-nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) +
-                                  sqrt((nc.sids$SID74+1)/nc.sids$BIR74))
+nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) + sqrt((nc.sids$SID74+1)/nc.sids$BIR74))
 
-nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) +
-                                    sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
+nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) + sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
 
 ## Plot
-l_ccmaps(data = nc.sids,
+l_ccmaps(spdf = nc.sids,
          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
          optimize = FALSE,
-         title = "North Carolina SIDS rates")
+         title = "North Carolina SIDS Rates")
 
 }
 

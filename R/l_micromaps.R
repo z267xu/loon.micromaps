@@ -112,8 +112,9 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
 
   color_orig <- color
-  if (is.null(color)) color <- loon_palette(max(grouping))
   if (!is.null(color) & !is.character(color)) stop('color, if specified, should consist of character values')
+
+  if (is.null(color)) color <- loon_palette(max(grouping))
   if (length(color) > 0) color <- rep(color, length.out = max(grouping))
 
 
@@ -639,11 +640,11 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
   # Return values -----
   ret <- list(top = tt,
-                linkingGroup = linkingGroup,
-                linkingKey = linkingKey,
-                labels = list(base = p_label, text = p_label_text),
-                scatterplots = p_scatterplot,
-                maps = list(base = p_map_base, polygons = p_map))
+              linkingGroup = linkingGroup,
+              linkingKey = linkingKey,
+              labels = list(base = p_label, text = p_label_text),
+              scatterplots = p_scatterplot,
+              maps = list(base = p_map_base, polygons = p_map))
 
   return(invisible(ret))
 

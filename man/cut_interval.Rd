@@ -6,7 +6,7 @@
   defined by the minimum, cut_lwr, cut_upr and maximum.
   Break points need not be unique}
 \usage{
-cut_interval(x, cut_lwr, cut_upr)
+cut_interval(x, cuts)
 }
 \description{
 Partitions x (numeric vector) into up to three intervals, with break points
