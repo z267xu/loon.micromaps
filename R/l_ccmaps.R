@@ -1059,7 +1059,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
 
   ret <- list(top = tt,
-              maps = list(base = p_base, polygons = p_map))
+              maps = list(base = p_base, polygons = p))
 
   return(invisible(ret))
 

@@ -17,26 +17,15 @@
 #'
 #' USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb', sort = F)
 #'
-#' grouping <- 8
-#'
-#' ord.var <- 'pov'
-#' ord.var.axis <- 'Percent'
-#' ord.var.label <- 'Poverty Rate'
-#'
-#' var2 <- 'ed'
-#' var2.axis <- 'Percent'
-#' var2.label <- 'Education Rate'
-#'
-#' lab.label <- 'States'
-#'
-#' states <- USstates@data$ST_NAME
-#'
-#' mm <- l_micromaps(spdf = USstates, labels = states, grouping = grouping,
-#'                   ord.var = ord.var, ord.var.axis = ord.var.axis, ord.var.label = ord.var.label,
-#'                   var2 = var2, var2.axis = var2.axis, var2.label = var2.label,
-#'                   lab.label = lab.label)
+#' mm <- l_micromaps(spdf = USstates,
+#'                   lab.label = 'States',
+#'                   variables = list(id.var = 'ST_NAME',
+#'                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
+#'                                    var2 = list(name = 'ed', xlab = 'Percent')),
+#'                   linkingGroup = 'micromaps', sync = 'push')
 #'
 #' }
+#'
 l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                         spdf, grouping = NULL, n_groups = NULL,
                         map.label = 'Map', lab.label = 'Labels', title = 'Micromaps',

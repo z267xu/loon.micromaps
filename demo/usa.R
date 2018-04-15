@@ -1,4 +1,5 @@
 
+library(loon.micromaps)
 library(rgdal)
 
 # Read in data -----
