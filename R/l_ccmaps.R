@@ -503,6 +503,11 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     stop("spdf has to be of SpatialPolygonsDataFrame class")}
 
 
+  if (length(unique(spdf@plotOrder)) != nrow(spdf@data)) {
+    stop('plotOrder for spdf does not correspond to the number of data points')
+  }
+
+
   var_len <- sapply(c('respvar', 'cond1var', 'cond2var', 'var_inspector',
                       'optimize', 'otry', 'title', 'seg1col', 'seg2col', 'seg3col'),
                     function(x) length(get(x)))

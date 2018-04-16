@@ -15,7 +15,7 @@
 #' data("USstates")
 #' data("edPov")
 #'
-#' USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb', sort = F)
+#' USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb')
 #'
 #' mm <- l_micromaps(spdf = USstates,
 #'                   lab.label = 'States',
@@ -44,6 +44,10 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
   if (!is(spdf, 'SpatialPolygonsDataFrame'))
     stop('spdf must be of class SpatialPolygonsDataFrame')
+
+  if (length(unique(spdf@plotOrder)) != nrow(spdf@data)) {
+    stop('plotOrder for spdf does not correspond to the number of data points')
+  }
 
   for (vars in c('map.label', 'lab.label', 'title')) {
     if (!is.character(get(vars)) | length(get(vars)) > 1 | identical(get(vars), ''))

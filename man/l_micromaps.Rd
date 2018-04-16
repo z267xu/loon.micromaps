@@ -21,7 +21,7 @@ library(micromap)
 data("USstates")
 data("edPov")
 
-USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb', sort = F)
+USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb')
 
 mm <- l_micromaps(spdf = USstates,
                   lab.label = 'States',
