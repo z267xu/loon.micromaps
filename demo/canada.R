@@ -35,7 +35,7 @@ l_micromaps(spdf = cd_southon,
                              grouping.var = list(name = 'pct_immigrants',
                                                  xlab = NULL,
                                                  label = '% Immigrant Population'),
-                             var3 = list(name = 'pop_density', xlab = 'Per KM^2')),
+                             var2 = list(name = 'pop_density', xlab = 'Per KM^2')),
             glyph = 'square', linkingGroup = 'Southern_ON', sync = 'push')
 
 
