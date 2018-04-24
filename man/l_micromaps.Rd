@@ -7,8 +7,9 @@
 l_micromaps(tt = tktoplevel(), var_inspector = TRUE, spdf,
   grouping = NULL, n_groups = NULL, map.label = "Map",
   lab.label = "Labels", title = "Micromaps", variables = list(id.var =
-  NULL, ...), color = NULL, size = 6, linkingKey = NULL,
-  linkingGroup = NULL, sync = c("pull", "push"), ...)
+  NULL, ...), num_optvars = NULL, spacing = c("equal", "max"),
+  color = NULL, size = 6, linkingKey = NULL, linkingGroup = NULL,
+  sync = c("pull", "push"), ...)
 }
 \description{
 Micromaps in loon
@@ -28,6 +29,7 @@ mm <- l_micromaps(spdf = USstates,
                   variables = list(id.var = 'ST_NAME',
                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
                                    var2 = list(name = 'ed', xlab = 'Percent')),
+                  spacing = 'max',
                   linkingGroup = 'micromaps', sync = 'push')
 
 }

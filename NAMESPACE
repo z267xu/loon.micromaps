@@ -2,7 +2,8 @@
 
 export(bind_map2scat)
 export(bind_map2scat_add)
-export(bind_scat2map)
+export(bind_scat2map_col)
+export(bind_scat2map_sel)
 export(bind_zoompandelta)
 export(disable_zoompandelta)
 export(l_ccmaps)

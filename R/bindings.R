@@ -61,25 +61,47 @@ bind_zoompandelta <- function(direction = c('x', 'y', 'xy'), ...) {
 #' Bind scatterplot points selection to polygon map layer
 #' @export
 #'
-bind_scat2map <- function(s, m, mapping, orig_colors) {
+bind_scat2map_sel <- function(s, m, mapping, plotorder_exp, ids) {
 
-  l_bind_state(s, 'selected', function() updateMap_sp())
+  l_bind_state(s, 'selected', function() updateMap_sp_sel())
 
-  updateMap_sp <- function() {
+  updateMap_sp_sel <- function() {
 
     sel <- l_cget(s, 'selected')
-
     j <- unlist(mapping[sel])
 
-    new_colors <- orig_colors
-    new_colors[j] <- 'magenta'
+    new_colors <- l_cget(s, 'color')
 
-    l_configure(m, color = new_colors)
+    new_colors_m <- new_colors[match(plotorder_exp, ids)]
+    new_colors_m[is.na(new_colors_m)] <- 'cornsilk'
+    new_colors_m[j] <- 'magenta'
+
+    l_configure(m, color = new_colors_m)
 
   }
 
 }
 
+
+#' Bind scatterplot colors to polygon map layer
+#' @export
+#'
+bind_scat2map_col <- function(s, m, plotorder_exp, ids) {
+
+  l_bind_state(s, 'color', function() updateMap_sp_col())
+
+  updateMap_sp_col <- function() {
+
+    new_colors <- l_cget(s, 'color')
+
+    new_colors_m <- new_colors[match(plotorder_exp, ids)]
+    new_colors_m[is.na(new_colors_m)] <- 'cornsilk'
+
+    l_configure(m, color = new_colors_m)
+
+  }
+
+}
 
 
 #' Bind polygon layer selection to scatterplot points

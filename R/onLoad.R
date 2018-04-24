@@ -11,7 +11,7 @@
 
     superclass ::loon::classes::Inspector2
 
-    variable path canvas from to min max resolution orient seg1col seg2col seg3col\\
+    variable path canvas from to min max resolution orient seg1col seg2col seg3col from_text to_text\\
     b_w b_e b_s b_n slider_width slider_width2 slider_peak pad_text\\
     current_slider n_pix_per_res n_pix_per_res2\\
     mouse_x mouse_y
@@ -24,14 +24,14 @@
     set n_pix_per_res 1
     set n_pix_per_res2 0.5
 
-    set b_w 35
-    set b_e 35
-    set b_s 35
-    set b_n 35
+    set b_w 20
+    set b_e 20
+    set b_s 20
+    set b_n 20
     set slider_peak 5
     set slider_width 12
     set slider_width2 6
-    set pad_text 3
+    set pad_text 2
 
     next $Path
 
@@ -39,6 +39,8 @@
     my New_state to double 1 1
     my New_state min double 1 0
     my New_state max double 1 1
+    my New_state from_text double 1 0
+    my New_state to_text double 1 1
     my New_state resolution positive_double 1 0.01
     my New_state orient string 1 "horizontal"
     #my New_state showvalues orient boolean 1 TRUE
@@ -51,6 +53,10 @@
     "from value of scale"
     my SetStateDescription to\\
     "to value of scale"
+    my SetStateDescription from_text\\
+    "from value text of scale"
+    my SetStateDescription to_text\\
+    "to value text of scale"
     my SetStateDescription min\\
     "position of min slider"
     my SetStateDescription max\\
@@ -112,7 +118,7 @@
     frame $path -class LoonMinMaxScale
     set canvas [canvas ${path}.canvas]
 
-    pack $canvas -fill both -expand TRUE -side top
+    pack $canvas -fill none -expand TRUE -side top
 
     bind $canvas <Configure> "[self namespace]::my Redraw"
     $canvas bind "min||max||drag1||drag2" <ButtonPress-1>\\
@@ -174,6 +180,10 @@
     [expr {$loc_min - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
     -text [format "%.3g" $min] -anchor n -justify center
 
+    $canvas create text\\
+    [expr {$x0 - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+    -text [format "%.3g" $from_text] -anchor n -justify center
+
     $canvas create rect\\
     $loc_max $y0 [expr {$loc_max + $slider_width}] $y1\\
     -fill white -tag max
@@ -181,6 +191,10 @@
     $canvas create text\\
     [expr {$loc_max + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
     -text [format "%.3g" $max] -anchor s -justify center
+
+    $canvas create text\\
+    [expr {$x1 + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+    -text [format "%.3g" $to_text] -anchor s -justify center
 
     set n_pix_per_res [expr {$dx/($to - $from)*$resolution}]
     set n_pix_per_res2 [expr {$n_pix_per_res/2.0}]
@@ -210,6 +224,10 @@
     [expr {$x0 - 6*$pad_text}] $loc_min\\
     -text [format "%.3g" $min] -anchor n -justify center
 
+    $canvas create text\\
+    [expr {$x0 - 6*$pad_text}] $y1\\
+    -text [format "%.3g" $from_text] -anchor n -justify center
+
     $canvas create rect\\
     $x0 $loc_max $x1 [expr {$loc_max - $slider_width}]\\
     -fill white -tag max
@@ -217,6 +235,10 @@
     $canvas create text\\
     [expr {$x1 + 6*$pad_text}] $loc_max\\
     -text [format "%.3g" $max] -anchor s -justify center
+
+    $canvas create text\\
+    [expr {$x1 + 6*$pad_text}] $y0\\
+    -text [format "%.3g" $to_text] -anchor s -justify center
 
     set n_pix_per_res [expr {$dy/($to - $from)*$resolution}]
     set n_pix_per_res2 [expr {$n_pix_per_res/2.0}]

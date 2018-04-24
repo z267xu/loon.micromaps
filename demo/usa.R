@@ -11,7 +11,7 @@ USstates@data <- merge(USstates@data, statedata, by.x = "ST", by.y = "state.abbr
 
 
 # Draw micromaps -----
-l_micromaps(spdf = usadata,
+l_micromaps(spdf = USstates,
             lab.label = 'States',
             variables = list(id.var = 'ST_NAME',
                              grouping.var = list(name = 'lung_bronch_death'),

@@ -22,6 +22,7 @@
 #'                   variables = list(id.var = 'ST_NAME',
 #'                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
 #'                                    var2 = list(name = 'ed', xlab = 'Percent')),
+#'                   spacing = 'max',
 #'                   linkingGroup = 'micromaps', sync = 'push')
 #'
 #' }
@@ -29,8 +30,8 @@
 l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                         spdf, grouping = NULL, n_groups = NULL,
                         map.label = 'Map', lab.label = 'Labels', title = 'Micromaps',
-                        variables = list(id.var = NULL, ...),
-                        color = NULL, size = 6,
+                        variables = list(id.var = NULL, ...), num_optvars = NULL,
+                        spacing = c('equal', 'max'), color = NULL, size = 6,
                         linkingKey = NULL, linkingGroup = NULL, sync = c('pull', 'push'), ...) {
 
   .Tcl('set ::loon::Options(printInConfigurationWarning) FALSE')
@@ -103,6 +104,8 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     rep(y, times = x)
   }, grouping, 1:n_groups) %>% unlist()
 
+  max_per_group <- max(grouping)
+
 
   color_orig <- color
   if (!is.null(color) & !is.character(color)) stop('color, if specified, should consist of character values')
@@ -132,7 +135,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
 
   xlims <- lapply(scatterplot_vars, function(v) {
-    spdf@data[[get(v)]] %>% extendrange()
+    spdf@data[[get(v)]] %>% pretty() %>% extendrange()
   })
 
 
@@ -163,14 +166,15 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   mapping_map2scatterplot <- vector('list', length = n_groups)
 
 
+  data <- vector('list', length = n_groups)
 
   # Create plots -----
   for (i in 1:n_groups) {
 
-    data <- spdf@data[spdf@data$group == i, ] %>%
+    data[[i]] <- spdf@data[spdf@data$group == i, ] %>%
       arrange_(.dots = c(paste0('-', grouping.var), 'NAME'))
 
-    data$colors <- color[1:nrow(data)]
+    data[[i]]$colors <- color[1:nrow(data[[i]])]
 
 
     # Scatterplot(s)
@@ -178,18 +182,36 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
       var <- get(scatterplot_vars[jj])
 
+      if (spacing == 'max') {
+        y_pr <- seq(max_per_group, max_per_group - nrow(data[[i]]) + 1)
+      } else {
+        y_pr <- seq(grouping[i], 1)
+      }
+
       p_scatterplot[[jj]][i] <- l_plot(parent = tt,
-                                       x = data[[var]],
-                                       y = seq(grouping[i], 1),
-                                       color = color[1:nrow(data)],
+                                       x = data[[i]][[var]],
+                                       y = y_pr,
+                                       color = color[1:nrow(data[[i]])],
                                        size = size,
-                                       linkingKey = data$linkingKey,
+                                       linkingKey = data[[i]]$linkingKey,
                                        linkingGroup = linkingGroup,
                                        sync = sync, ...)
 
+      if (spacing == 'max') {
+
+        l_configure(p_scatterplot[[jj]][i],
+                    panY = 0, zoomY = 1, deltaY = max_per_group + 1)
+
+      } else {
+
+        l_configure(p_scatterplot[[jj]][i],
+                    panY = 0, zoomY = 1, deltaY = grouping[i] + 1)
+
+      }
+
+
       l_configure(p_scatterplot[[jj]][i],
                   panX = xlims[[jj]][1], zoomX = 1, deltaX = diff(xlims[[jj]]),
-                  panY = 0, zoomY = 1, deltaY = grouping[i] + 1,
                   showLabels = T, xlabel = '', ylabel = '')
 
     }
@@ -208,7 +230,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
     # Get colors for polygons
     color_df[[i]] <- data.frame(key = plotorder_exp,
-                                color = data$colors[match(plotorder_exp, data$id)],
+                                color = data[[i]]$colors[match(plotorder_exp, data[[i]]$id)],
                                 stringsAsFactors = F)
     color_df[[i]]$color[is.na(color_df[[i]]$color)] <- 'cornsilk'
 
@@ -218,37 +240,47 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
     # Labels
     p_label[i] <- l_plot(parent = tt,
-                         x = rep(1, nrow(data)),
-                         y = seq(grouping[i], 1),
-                         color = color[1:nrow(data)],
+                         x = rep(1, nrow(data[[i]])),
+                         y = y_pr,
+                         color = color[1:nrow(data[[i]])],
                          size = size,
-                         linkingKey = data$linkingKey,
+                         linkingKey = data[[i]]$linkingKey,
                          linkingGroup = linkingGroup,
                          sync = sync, ...)
 
+
+    if (spacing == 'max') {
+      l_configure(p_label[i],
+                  panY = 0, zoomY = 1, deltaY = max_per_group + 1)
+    } else {
+      l_configure(p_label[i],
+                  panY = 0, zoomY = 1, deltaY = grouping[i] + 1)
+    }
+
+
     l_configure(p_label[i], panX = 0, zoomX = 1, deltaX = 6,
-                panY = 0, zoomY = 1, deltaY = grouping[i] + 1,
                 xlabel = '', ylabel = '')
 
 
+
     # Truncate label text if they are too long
-    trunc_labels <- vapply(as.character(data$NAME),
+    trunc_labels <- vapply(as.character(data[[i]]$NAME),
                            function(x) ifelse(nchar(x) > 25, paste0(substr(x, 1, 25), '...'), x),
                            FUN.VALUE = character(1), USE.NAMES = F)
 
     p_label_text[i] <- l_layer_texts(p_label[i],
-                                     x = rep(2, nrow(data)),
-                                     y = seq(grouping[i], 1),
+                                     x = rep(2, nrow(data[[i]])),
+                                     y = y_pr,
                                      text = trunc_labels,
                                      anchor = 'w',
                                      size = size,
                                      col = 'black')
 
 
-    mapping_scatterplot2map[[i]] <- lapply(data$NAME, function(x) which(attr(p_map[[i]], 'NAME') == x))
-    names(mapping_scatterplot2map[[i]]) <- data$NAME
+    mapping_scatterplot2map[[i]] <- lapply(data[[i]]$NAME, function(x) which(attr(p_map[[i]], 'NAME') == x))
+    names(mapping_scatterplot2map[[i]]) <- data[[i]]$NAME
 
-    mapping_map2scatterplot[[i]] <- match(attr(p_map[[i]], 'NAME'), data$NAME)
+    mapping_map2scatterplot[[i]] <- match(attr(p_map[[i]], 'NAME'), data[[i]]$NAME)
 
   }
 
@@ -263,12 +295,22 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
 
   # Axis for scatterplots -----
-  axis_tickpoints <- lapply(scatterplot_vars, function(v) pretty(spdf@data[[get(v)]], n = 5))
+  axis_tickpoints <- lapply(scatterplot_vars, function(v) pretty(spdf@data[[get(v)]]))
 
 
   for (kk in 1:length(scatterplot_vars)) {
 
     axis <- axis_tickpoints[[kk]]
+
+    ticks_x <- Map(function(z) {
+      c(axis[z], axis[z])
+    }, 1:length(axis))
+
+
+    ticks_y <- Map(function(z) {
+      c(0.5, 0.7)
+    }, 1:length(axis))
+
 
     p_scale_base[kk] <- l_plot(parent = tt,
                                background = 'gray95', foreground = 'gray95',
@@ -280,16 +322,10 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                                       text = axis, color = 'black')
 
     p_scale_ticks[kk] <- l_layer_lines(p_scale_base[kk],
-                                       x = list(c(min(xlims[[kk]], axis), max(xlims[[kk]], axis)),
-                                                c(axis[2], axis[2]),
-                                                c(axis[3], axis[3]),
-                                                c(axis[4], axis[4]),
-                                                c(axis[5], axis[5])),
-                                       y = list(c(0.7, 0.7),
-                                                c(0.5, 0.7),
-                                                c(0.5, 0.7),
-                                                c(0.5, 0.7),
-                                                c(0.5, 0.7)))
+                                       x = c(list(c(xlims[[kk]][1], xlims[[kk]][2])),
+                                             ticks_x),
+                                       y = c(list(c(0.7, 0.7)),
+                                             ticks_y))
 
     l_configure(p_scale_base[kk],
                 panX = xlims[[kk]][1], zoomX = 1, deltaX = diff(xlims[[kk]]))
@@ -316,9 +352,18 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
 
   # Connecting scatterplot points to polygons in maps
-  b_scatterplot2map <- lapply(1:n_groups, function(x) {
-    bind_scat2map(s = p_scatterplot[[1]][x], m = p_map[[x]],
-                  mapping = mapping_scatterplot2map[[x]], orig_colors = color_df[[x]]$color)
+  b_scatterplot2map_sel <- lapply(1:n_groups, function(x) {
+
+    bind_scat2map_sel(s = p_scatterplot[[1]][x], m = p_map[[x]],
+                      mapping = mapping_scatterplot2map[[x]],
+                      plotorder_exp = plotorder_exp, ids = data[[x]]$id)
+
+  })
+
+
+  b_scatterplot2map_col <- lapply(1:n_groups, function(x) {
+    bind_scat2map_col(s = p_scatterplot[[1]][x], m = p_map[[x]],
+                      plotorder_exp = plotorder_exp, ids = data[[x]]$id)
   })
 
 
@@ -412,6 +457,15 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
 
 
+  # Return values -----
+  ret <- list(top = tt,
+              linkingGroup = linkingGroup,
+              linkingKey = linkingKey,
+              labels = list(base = p_label, text = p_label_text),
+              scatterplots = p_scatterplot,
+              maps = list(base = p_map_base, polygons = p_map))
+
+
 
   # Inspector -----
   mmInspector <- function(w) {
@@ -419,11 +473,33 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     tt_inspector <- tktoplevel()
     tktitle(tt_inspector) <- 'Micromaps Custom Inspector'
 
+
     overall <- tkframe(tt_inspector)
+    labs <- tkframe(overall, borderwidth = 3)
     gr <- tkframe(overall, relief = 'groove', borderwidth = 3)
     sz <- tkframe(overall, borderwidth = 3)
     opt <- tkframe(overall, relief = 'groove', borderwidth = 3)
     final <- tkframe(overall, borderwidth = 3)
+
+
+    # Label section
+    lab.label_i <- tclVar(lab.label)
+    entry.lab.label <- tkentry(labs, textvariable = lab.label_i, width = 20)
+
+    map.label_i <- tclVar(map.label)
+    entry.map.label <- tkentry(labs, textvariable = map.label_i, width = 20)
+
+
+    tkgrid(tklabel(labs, text = 'Labels', anchor = 'e'),
+           padx = 5, pady = 5, row = 0, columnspan = 4, sticky = 'w')
+
+    tkgrid(tklabel(labs, text = 'Point label: ', anchor = 'w'),
+           tklabel(labs, text = 'Map label: ', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 1)
+
+    tkgrid(entry.lab.label,
+           entry.map.label,
+           sticky = 'w', padx = 5, pady = 5, row = 2)
 
 
     # Grouping section
@@ -470,7 +546,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
            sticky = 'w', padx = 5, pady = 5, row = 4)
 
 
-
+    # Font size
     currSize <- tclVar(as.character(size))
     size_disp <- tklabel(sz, textvariable = currSize)
 
@@ -482,15 +558,42 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
            minus, plus, size_disp)
 
 
+    # Optional variables
+    num_vars <- max(1, length(p_scatterplot) - 2, num_optvars)
 
-    var2_i <- tclVar(ifelse(exists('var2'), var2, 'NA'))
-    box.var2 <- ttkcombobox(opt, values = c('NA', vars),
-                            textvariable = var2_i,
-                            state = 'readonly')
-    var2.xlab_i <- tclVar(ifelse(exists('var2.xlab'), var2.xlab, ''))
-    entry.var2.xlab <- tkentry(opt, textvariable = var2.xlab_i, width = 20)
-    var2.label_i <- tclVar(ifelse(exists('var2.label'), var2.label, ''))
-    entry.var2.label <- tkentry(opt, textvariable = var2.label_i, width = 20)
+    var_i <- vector('list', length = num_vars)
+    box.var <- vector('list', length = num_vars)
+    var.xlab_i <- vector('list', length = num_vars)
+    entry.var.xlab <- vector('list', length = num_vars)
+    var.label_i <- vector('list', length = num_vars)
+    entry.var.label <- vector('list', length = num_vars)
+
+    for (i in 1:num_vars) {
+
+      varname <- setdiff(names(variables), c('id.var', 'grouping.var'))[i]
+
+      var_i[[i]] <- tclVar(ifelse(is.na(varname), 'NA', get(varname)))
+      box.var[[i]] <- ttkcombobox(opt, values = c('NA', vars),
+                                  textvariable = var_i[[i]],
+                                  state = 'readonly')
+
+      var.xlab_i[[i]] <- tclVar(ifelse(is.na(varname), '', get(paste0(varname, '.xlab'))))
+      entry.var.xlab[[i]] <- tkentry(opt, textvariable = var.xlab_i[[i]], width = 20)
+
+      var.label_i[[i]] <- tclVar(ifelse(is.na(varname), '', get(paste0(varname, '.label'))))
+      entry.var.label[[i]] <- tkentry(opt, textvariable = var.label_i[[i]], width = 20)
+
+    }
+
+
+    # var2_i <- tclVar(ifelse(exists('var2'), var2, 'NA'))
+    # box.var2 <- ttkcombobox(opt, values = c('NA', vars),
+    #                         textvariable = var2_i,
+    #                         state = 'readonly')
+    # var2.xlab_i <- tclVar(ifelse(exists('var2.xlab'), var2.xlab, ''))
+    # entry.var2.xlab <- tkentry(opt, textvariable = var2.xlab_i, width = 20)
+    # var2.label_i <- tclVar(ifelse(exists('var2.label'), var2.label, ''))
+    # entry.var2.label <- tkentry(opt, textvariable = var2.label_i, width = 20)
 
 
     tkgrid(tklabel(opt, text = 'Optional', anchor = 'e'),
@@ -501,11 +604,18 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
            tklabel(opt, text = 'Plot label: ', anchor = 'w'),
            sticky = 'w', padx = 5, pady = 5, row = 1)
 
-    tkgrid(box.var2,
-           entry.var2.xlab,
-           entry.var2.label,
-           sticky = 'w', padx = 5, pady = 5, row = 2)
 
+    for (j in 1:num_vars) {
+
+      tkgrid(box.var[[j]], entry.var.xlab[[j]], entry.var.label[[j]],
+             sticky = 'w', padx = 5, pady = 5, row = j + 1)
+
+    }
+
+    # tkgrid(box.var2,
+    #        entry.var2.xlab,
+    #        entry.var2.label,
+    #        sticky = 'w', padx = 5, pady = 5, row = 2)
 
 
     submit <- tkbutton(final, text = 'Submit', command = function() updatemm())
@@ -513,6 +623,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     tkgrid(submit, sticky = 'nse', padx = 5, pady = 5)
 
 
+    tkgrid(labs, sticky = 'w')
     tkgrid(gr, sticky = 'w')
     tkgrid(sz, sticky = 'w')
     tkgrid(opt, sticky = 'w')
@@ -537,6 +648,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       })
 
     }
+
 
     downsize <- function() {
 
@@ -567,13 +679,50 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     updatemm <- function() {
 
 
+      if (identical(tclvalue(lab.label_i), '')) {
+        lab.label_new <- 'Labels'
+      } else {
+        lab.label_new <- tclvalue(lab.label_i)
+      }
+
+
+      if (identical(tclvalue(map.label_i), '')) {
+        map.label_new <- 'Maps'
+      } else {
+        map.label_new <- tclvalue(map.label_i)
+      }
+
+
       grouping.var_new <- tclvalue(grouping.var_i)
       grouping.var.xlab_new <- tclvalue(grouping.var.xlab_i)
       grouping.var.label_new <- tclvalue(grouping.var.label_i)
 
-      var2_new <- tclvalue(var2_i)
-      var2.xlab_new <- tclvalue(var2.xlab_i)
-      var2.label_new <- tclvalue(var2.label_i)
+
+
+      opt.vars <- Map(function(ii) {
+
+        if (identical(tclvalue(var_i[[ii]]), 'NA')) {
+          return(NULL)
+        } else {
+          name <- tclvalue(var_i[[ii]])
+        }
+
+        xlab <- tclvalue(var.xlab_i[[ii]])
+
+        label <- tclvalue(var.label_i[[ii]])
+
+
+        list(name = name, xlab = xlab, label = label)
+
+      }, 1:num_vars) %>% Filter(Negate(is.null), .)
+
+
+      if (length(opt.vars) > 0) names(opt.vars) <- paste0('var', 1:length(opt.vars))
+
+
+      # var2_new <- tclvalue(var2_i)
+      # var2.xlab_new <- tclvalue(var2.xlab_i)
+      # var2.label_new <- tclvalue(var2.label_i)
 
 
       if (identical(tclvalue(grouping_i), '')) {
@@ -583,6 +732,7 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
           strsplit(., ',') %>% unlist() %>%
           trimws() %>% as.numeric()
       }
+
 
       if (identical(tclvalue(n_groups_i), '')) {
         n_groups_new <- NULL
@@ -594,20 +744,28 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       size_new <- as.numeric(tclvalue(currSize))
 
 
-      if (identical(var2_new, 'NA')) {
-        variables = list(id.var = id.var,
-                         grouping.var = list(name = grouping.var_new,
-                                             xlab = grouping.var.xlab_new,
-                                             label = grouping.var.label_new))
-      } else {
-        variables = list(id.var = id.var,
-                         grouping.var = list(name = grouping.var_new,
-                                             xlab = grouping.var.xlab_new,
-                                             label = grouping.var.label_new),
-                         var2 = list(name = var2_new,
-                                     xlab = var2.xlab_new,
-                                     label = var2.label_new))
-      }
+      # if (identical(var2_new, 'NA')) {
+      #   variables = list(id.var = id.var,
+      #                    grouping.var = list(name = grouping.var_new,
+      #                                        xlab = grouping.var.xlab_new,
+      #                                        label = grouping.var.label_new))
+      # } else {
+      #   variables = list(id.var = id.var,
+      #                    grouping.var = list(name = grouping.var_new,
+      #                                        xlab = grouping.var.xlab_new,
+      #                                        label = grouping.var.label_new),
+      #                    var2 = list(name = var2_new,
+      #                                xlab = var2.xlab_new,
+      #                                label = var2.label_new))
+      # }
+
+
+
+      variables <- c(list(id.var = id.var,
+                          grouping.var = list(name = grouping.var_new,
+                                              xlab = grouping.var.xlab_new,
+                                              label = grouping.var.label_new)),
+                     opt.vars)
 
 
       spdf@data <- spdf@data[, !(names(spdf@data) %in% c('linkingKey', 'group'))]
@@ -615,8 +773,8 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
       l_micromaps(tt = w$top, var_inspector = FALSE,
                   spdf = spdf, grouping = grouping_new, n_groups = n_groups_new,
-                  variables = variables,
-                  map.label = map.label, lab.label = lab.label, title = title,
+                  variables = variables, num_optvars = num_optvars,
+                  map.label = map.label_new, lab.label = lab.label_new, title = title,
                   color = color_orig, size = size_new,
                   linkingKey = linkingKey, linkingGroup = linkingGroup, sync = sync, ...)
 
@@ -629,15 +787,6 @@ l_micromaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
   if (var_inspector) mmInspector(ret)
 
-
-
-  # Return values -----
-  ret <- list(top = tt,
-              linkingGroup = linkingGroup,
-              linkingKey = linkingKey,
-              labels = list(base = p_label, text = p_label_text),
-              scatterplots = p_scatterplot,
-              maps = list(base = p_map_base, polygons = p_map))
 
   return(invisible(ret))
 

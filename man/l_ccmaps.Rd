@@ -6,9 +6,9 @@
 \usage{
 l_ccmaps(tt = tktoplevel(), var_inspector = TRUE, spdf, respvar,
   respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
-  cond2var.lab = NULL, respbreaks = 3, seg1col = "blue",
+  cond2var.lab = NULL, respbreaks = 3, size = 10, seg1col = "blue",
   seg2col = "darkgrey", seg3col = "red", optimize = FALSE, otry = 10,
-  title = "CCmaps")
+  title = "CCmaps", scaletop = NULL)
 }
 \arguments{
 \item{respvar}{character name of the response value variable}
