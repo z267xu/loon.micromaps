@@ -29,21 +29,21 @@ cd_southon@data <- merge(cd_southon@data, canada_data,
 
 
 # Draw micromaps -----
-l_micromaps(spdf = cd_southon,
-            lab.label = 'Census Divisions',
-            variables = list(id.var = 'CDNAME',
-                             grouping.var = list(name = 'pct_immigrants',
-                                                 xlab = NULL,
-                                                 label = '% Immigrant Population'),
-                             var2 = list(name = 'pop_density', xlab = 'Per KM^2')),
-            glyph = 'square', linkingGroup = 'Southern_ON', sync = 'push')
+mm <- l_micromaps(spdf = cd_southon,
+                  lab.label = 'Census Divisions',
+                  variables = list(id.var = 'CDNAME',
+                                   grouping.var = list(name = 'pct_immigrants',
+                                                       xlab = NULL,
+                                                       label = '% Immigrant Population'),
+                                   var2 = list(name = 'pop_density', xlab = 'Per KM^2')),
+                  spacing = 'equal', n_groups = 5,
+                  glyph = 'square', linkingGroup = 'Southern_ON', sync = 'push')
 
 
 # Draw CCmaps -----
-library(loon.micromaps)
 cc <- l_ccmaps(spdf = cd_southon,
-         respvar = 'pct_immigrants', respvar.lab = '% Immigrant Population',
-         cond1var = 'employ_rate_25_54', cond1var.lab = 'Employment Rate, Age 25-54',
-         cond2var = 'pop_density', cond2var.lab = 'Population Density',
-         seg1col = 'yellow', seg3col = 'orange')
+               respvar = 'pct_immigrants', respvar.lab = '% Immigrant Population',
+               cond1var = 'employ_rate_25_54', cond1var.lab = 'Employment Rate, Age 25-54',
+               cond2var = 'pop_density', cond2var.lab = 'Population Density',
+               seg1col = 'yellow', seg3col = 'orange')
 

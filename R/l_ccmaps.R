@@ -237,17 +237,17 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   tktitle(tt) <- title
 
 
-  p_base <- vector(length = n)
-  p <- vector("list",length = n)
+  tt$env$p_base <- vector(length = n)
+  tt$env$p <- vector("list",length = n)
 
   for (i in 1:n) {
 
     tt$env$p_base[i] <- l_plot(parent = tt)
 
-    p[[i]] <- l_layer(p_base[i], spdf,
-                      color = "cornsilk", asSingleLayer = TRUE)
+    tt$env$p[[i]] <- l_layer(tt$env$p_base[i], spdf,
+                             color = "cornsilk", asSingleLayer = TRUE)
 
-    l_scaleto_world(p_base[i])
+    l_scaleto_world(tt$env$p_base[i])
 
   }
 
@@ -331,7 +331,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
       colname <- paste0('group', group[k])
 
-      l_configure(c(p_base[k], p[[k]]), color = data[[colname]])
+      l_configure(c(tt$env$p_base[k], tt$env$p[[k]]), color = data[[colname]])
 
     }
   }
@@ -342,7 +342,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     data <- data[!duplicated(data$id), ]
 
     r2 <- r2_calc(data$resp, data$group)
-    tcl(r2label, 'configure', text = paste0("R^2: ", round(r2, 2)))
+    tcl(tt$env$r2label, 'configure', text = paste0("R^2: ", round(r2, 2)))
 
 
     model_values <- attr(r2, 'model_values')
@@ -356,11 +356,11 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
         fitted_r <- round(match[['fitted_value']], 2)
 
-        l_configure(c(p_base[i], plabel[i]), text = fitted_r)
+        l_configure(c(tt$env$p_base[i], tt$env$plabel[i]), text = fitted_r)
 
       } else {
 
-        l_configure(c(p_base[i], plabel[i]), text = "NA")
+        l_configure(c(tt$env$p_base[i], tt$env$plabel[i]), text = "NA")
 
       }
     }
@@ -377,8 +377,8 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   # R2 -----
   # Model values and R^2 label
   r2 <- r2_calc(df$resp[!duplicated(df$id)], df$group[!duplicated(df$id)])
-  r2label <- tcl('label', l_subwin(tt,'r2label'), text = paste0("R^2: ", round(r2, 2)),
-                 font = tkfont.create(size = size))
+  tt$env$r2label <- tcl('label', l_subwin(tt,'r2label'), text = paste0("R^2: ", round(r2, 2)),
+                        font = tkfont.create(size = size))
 
   model_values <- attr(r2, 'model_values')
 
@@ -386,7 +386,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   xcoord <- spdf@bbox[1,1] - 0.15
   ycoord <- spdf@bbox[2,1]
 
-  plabel <- vector(length = n)
+  tt$env$plabel <- vector(length = n)
 
   for (i in 1:n) {
 
@@ -396,19 +396,19 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
       fitted_r <- round(match[['fitted_value']], 2)
 
-      plabel[i] <- l_layer_text(p_base[i], x = xcoord, y = ycoord,
-                                text = fitted_r,
-                                size = size, index = "end", color = "grey")
+      tt$env$plabel[i] <- l_layer_text(tt$env$p_base[i], x = xcoord, y = ycoord,
+                                       text = fitted_r,
+                                       size = size, index = "end", color = "grey")
 
     } else {
 
-      plabel[i] <- l_layer_text(p_base[i], x = xcoord, y = ycoord,
-                                text = "NA",
-                                size = size, index = "end", color = "grey")
+      tt$env$plabel[i] <- l_layer_text(tt$env$p_base[i], x = xcoord, y = ycoord,
+                                       text = "NA",
+                                       size = size, index = "end", color = "grey")
 
     }
 
-    l_scaleto_world(p_base[i])
+    l_scaleto_world(tt$env$p_base[i])
 
   }
 
@@ -416,20 +416,20 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
   # Update function to be used on sliders
   updateGraph <- function() {
 
-    respcuts <- c(as.numeric(tkcget(scaletop, "-min")),
-                   as.numeric(tkcget(scaletop, "-max")))
+    respcuts <- c(as.numeric(tkcget(tt$env$scaletop, "-min")),
+                  as.numeric(tkcget(tt$env$scaletop, "-max")))
 
     respcuts <- c(get_number(respcuts[1], range(resp)),
                   get_number(respcuts[2], range(resp)))
 
-    cond1cuts <- c(as.numeric(tkcget(scaleright, "-min")),
-                   as.numeric(tkcget(scaleright, "-max")))
+    cond1cuts <- c(as.numeric(tkcget(tt$env$scaleright, "-min")),
+                   as.numeric(tkcget(tt$env$scaleright, "-max")))
 
     cond1cuts <- c(get_number(cond1cuts[1], range(cond1)),
                    get_number(cond1cuts[2], range(cond1)))
 
-    cond2cuts <- c(as.numeric(tkcget(scalebottom, "-min")),
-                   as.numeric(tkcget(scalebottom, "-max")))
+    cond2cuts <- c(as.numeric(tkcget(tt$env$scalebottom, "-min")),
+                   as.numeric(tkcget(tt$env$scalebottom, "-max")))
 
     cond2cuts <- c(get_number(cond2cuts[1], range(cond2)),
                    get_number(cond2cuts[2], range(cond2)))
@@ -462,9 +462,9 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     cond1cuts <- attr(spdf@data$cond1_cat, 'cuts')
     cond2cuts <- attr(spdf@data$cond2_cat, 'cuts')
 
-    tcl(scaletop, 'configure', min = respcuts[1] %>% get_pct(., range(resp)), max = respcuts[2] %>% get_pct(., range(resp)))
-    tcl(scaleright, 'configure', min = cond1cuts[1] %>% get_pct(., range(cond1)), max = cond1cuts[2] %>% get_pct(., range(cond1)))
-    tcl(scalebottom, 'configure', min = cond2cuts[1] %>% get_pct(., range(cond2)), max = cond2cuts[2] %>% get_pct(., range(cond2)))
+    tcl(tt$env$scaletop, 'configure', min = respcuts[1] %>% get_pct(., range(resp)), max = respcuts[2] %>% get_pct(., range(resp)))
+    tcl(tt$env$scaleright, 'configure', min = cond1cuts[1] %>% get_pct(., range(cond1)), max = cond1cuts[2] %>% get_pct(., range(cond1)))
+    tcl(tt$env$scalebottom, 'configure', min = cond2cuts[1] %>% get_pct(., range(cond2)), max = cond2cuts[2] %>% get_pct(., range(cond2)))
 
 
     orig_df <- data_wcol(resp = resp, resp_cat = spdf@data$resp_cat,
@@ -478,75 +478,65 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
   # Sliders and labels -----
   # Creates sliders and slider labels
-  labelscaletop <- tcl('label', l_subwin(tt,'scalelabel_top'),
-                       text = ifelse(is.null(respvar.lab), respvar, respvar.lab))
+  tt$env$labelscaletop <- tcl('label', l_subwin(tt,'scalelabel_top'),
+                              text = ifelse(is.null(respvar.lab), respvar, respvar.lab))
 
-  if (!is.null(scaletop)) {
-
-    tcl(scaletop, 'configure', from_text = min(resp), to_text = max(resp),
-        min = attr(spdf@data$resp_cat, 'cuts')[1] %>% get_pct(., range(resp)),
-        max = attr(spdf@data$resp_cat, 'cuts')[2] %>% get_pct(., range(resp)))
-
-  } else {
-
-    scaletop <- tcl('::minmax_scale2', l_subwin(tt, 'scaletop'),
-                    from = 0, to = 100,
-                    from_text = min(resp), to_text = max(resp),
-                    min = attr(spdf@data$resp_cat, 'cuts')[1] %>% get_pct(., range(resp)),
-                    max = attr(spdf@data$resp_cat, 'cuts')[2] %>% get_pct(., range(resp)),
-                    resolution = 0.1, orient = 'horizontal',
-                    seg1col = seg1col, seg2col = seg2col, seg3col = seg3col)
-
-  }
+  tt$env$scaletop <- tcl('::minmax_scale2', l_subwin(tt, 'scaletop'),
+                         from = 0, to = 100,
+                         from_text = min(resp), to_text = max(resp),
+                         min = attr(spdf@data$resp_cat, 'cuts')[1] %>% get_pct(., range(resp)),
+                         max = attr(spdf@data$resp_cat, 'cuts')[2] %>% get_pct(., range(resp)),
+                         resolution = 0.1, orient = 'horizontal',
+                         seg1col = seg1col, seg2col = seg2col, seg3col = seg3col)
 
 
 
-  labelscaleright <- tcl('label', l_subwin(tt,'scalelabel_right'),
-                         text = ifelse(is.null(cond1var.lab), cond1var, cond1var.lab))
+  tt$env$labelscaleright <- tcl('label', l_subwin(tt,'scalelabel_right'),
+                                text = ifelse(is.null(cond1var.lab), cond1var, cond1var.lab))
 
-  scaleright <- tcl('::minmax_scale2', l_subwin(tt, 'scaleright'),
-                    from = 0, to = 100,
-                    from_text = min(cond1), to_text = max(cond1),
-                    min = attr(spdf@data$cond1_cat, 'cuts')[1] %>% get_pct(., range(cond1)),
-                    max = attr(spdf@data$cond1_cat, 'cuts')[2] %>% get_pct(., range(cond1)),
-                    resolution = 0.1, orient="vertical")
+  tt$env$scaleright <- tcl('::minmax_scale2', l_subwin(tt, 'scaleright'),
+                           from = 0, to = 100,
+                           from_text = min(cond1), to_text = max(cond1),
+                           min = attr(spdf@data$cond1_cat, 'cuts')[1] %>% get_pct(., range(cond1)),
+                           max = attr(spdf@data$cond1_cat, 'cuts')[2] %>% get_pct(., range(cond1)),
+                           resolution = 0.1, orient="vertical")
 
 
-  labelscalebottom <- tcl('label', l_subwin(tt,'scalelabel_bottom'),
-                          text = ifelse(is.null(cond2var.lab), cond2var, cond2var.lab))
+  tt$env$labelscalebottom <- tcl('label', l_subwin(tt,'scalelabel_bottom'),
+                                 text = ifelse(is.null(cond2var.lab), cond2var, cond2var.lab))
 
-  scalebottom <- tcl('::minmax_scale2', l_subwin(tt, 'scalebottom'),
-                     from = 0, to = 100,
-                     from_text = min(cond2), to_text = max(cond2),
-                     min = attr(spdf@data$cond2_cat, 'cuts')[1] %>% get_pct(., range(cond2)),
-                     max = attr(spdf@data$cond2_cat, 'cuts')[2] %>% get_pct(., range(cond2)),
-                     resolution = 0.1, orient = "horizontal")
+  tt$env$scalebottom <- tcl('::minmax_scale2', l_subwin(tt, 'scalebottom'),
+                            from = 0, to = 100,
+                            from_text = min(cond2), to_text = max(cond2),
+                            min = attr(spdf@data$cond2_cat, 'cuts')[1] %>% get_pct(., range(cond2)),
+                            max = attr(spdf@data$cond2_cat, 'cuts')[2] %>% get_pct(., range(cond2)),
+                            resolution = 0.1, orient = "horizontal")
 
-  tcl(scaletop, 'configure', command = function(...) updateGraph())
-  tcl(scalebottom, 'configure', command = function(...) updateGraph())
-  tcl(scaleright, 'configure', command = function(...) updateGraph())
+  tcl(tt$env$scaletop, 'configure', command = function(...) updateGraph())
+  tcl(tt$env$scalebottom, 'configure', command = function(...) updateGraph())
+  tcl(tt$env$scaleright, 'configure', command = function(...) updateGraph())
 
 
   # Reset button
-  resetbutton <- tkbutton(tt, command = function(...) Reset(), text = "Reset Sliders")
+  tt$env$resetbutton <- tkbutton(tt, command = function(...) Reset(), text = "Reset Sliders")
 
 
   # Layout -----
-  tkgrid(labelscaletop, row = 0, column = 0, sticky = "e")
-  tkgrid(scaletop, row = 0, column = 1, sticky = "new")
+  tkgrid(tt$env$labelscaletop, row = 0, column = 0, sticky = "e")
+  tkgrid(tt$env$scaletop, row = 0, column = 1, sticky = "new")
 
   for (i in 1:3) {
     for (j in 0:2) {
-      tkgrid(p_base[(i-1)*3+j+1], row = i, column = j, sticky = "nesw")
+      tkgrid(tt$env$p_base[(i-1)*3+j+1], row = i, column = j, sticky = "nesw")
     }
   }
 
-  tkgrid(labelscalebottom, row = 4, column = 0, sticky = "e")
-  tkgrid(scalebottom, row = 4, column = 1, sticky = "new")
-  tkgrid(labelscaleright, row = 1, column = 3, sticky = "sew")
-  tkgrid(scaleright, row = 2, column = 3, rowspan = 2, sticky = "new")
-  tkgrid(r2label, row = 4, column = 3, sticky="nesw")
-  tkgrid(resetbutton, row = 4, column = 0)
+  tkgrid(tt$env$labelscalebottom, row = 4, column = 0, sticky = "e")
+  tkgrid(tt$env$scalebottom, row = 4, column = 1, sticky = "new")
+  tkgrid(tt$env$labelscaleright, row = 1, column = 3, sticky = "sew")
+  tkgrid(tt$env$scaleright, row = 2, column = 3, rowspan = 2, sticky = "new")
+  tkgrid(tt$env$r2label, row = 4, column = 3, sticky="nesw")
+  tkgrid(tt$env$resetbutton, row = 4, column = 0)
 
 
   tkgrid.columnconfigure(tt, 3, weight = 4, minsize = 25, pad = 20)
@@ -660,8 +650,8 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       newsize <- as.numeric(tclvalue(currSize)) + 1
       tclvalue(currSize) <- as.character(newsize)
 
-      tcl(r2label, 'configure', font = tkfont.create(size = newsize))
-      lapply(1:length(plabel), function(i) l_configure(c(p_base[i], plabel[i]), size = newsize))
+      tcl(tt$env$r2label, 'configure', font = tkfont.create(size = newsize))
+      lapply(1:length(tt$env$plabel), function(i) l_configure(c(tt$env$p_base[i], tt$env$plabel[i]), size = newsize))
 
     }
 
@@ -679,8 +669,8 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       tclvalue(currSize) <- as.character(newsize)
 
 
-      tcl(r2label, 'configure', font = tkfont.create(size = newsize))
-      lapply(1:length(plabel), function(i) l_configure(c(p_base[i], plabel[i]), size = newsize))
+      tcl(tt$env$r2label, 'configure', font = tkfont.create(size = newsize))
+      lapply(1:length(tt$env$plabel), function(i) l_configure(c(tt$env$p_base[i], tt$env$plabel[i]), size = newsize))
 
     }
 
@@ -692,16 +682,16 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       tcl(submit, 'configure', state = 'disabled')
       tcl('tk', 'busy', tt_inspector)
 
-      print(tkcget(scaletop, "-min"))
-      print(tkcget(scaletop, "-max"))
+      print(tkcget(tt$env$scaletop, "-min"))
+      print(tkcget(tt$env$scaletop, "-max"))
 
       if (tclvalue(respvar_i) == respvar) {
 
         respvar_new <- respvar
 
         respbreaks_new <- c(min(resp),
-                            as.numeric(tkcget(scaletop, "-min")) %>% get_number(., range(resp)),
-                            as.numeric(tkcget(scaletop, "-max")) %>% get_number(., range(resp)),
+                            as.numeric(tkcget(tt$env$scaletop, "-min")) %>% get_number(., range(resp)),
+                            as.numeric(tkcget(tt$env$scaletop, "-max")) %>% get_number(., range(resp)),
                             max(resp))
 
       } else {
@@ -742,7 +732,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       size_new <- as.numeric(tclvalue(currSize))
 
 
-      l_ccmaps(tt = w$top, var_inspector = FALSE,
+      l_ccmaps(tt = w, var_inspector = FALSE,
                spdf = spdf,
                respvar = respvar_new, respvar.lab = respvar.lab_new,
                cond1var = cond1var_new, cond1var.lab = cond1var.lab_new,
@@ -750,7 +740,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                respbreaks = respbreaks_new,
                size = size_new, seg1col = seg1col, seg2col = seg2col, seg3col = seg3col,
                optimize = optimize_new, otry = otry,
-               title = title, scaletop = scaletop)
+               title = title)
 
 
       tcl('tk', 'busy', 'forget', tt_inspector)
@@ -758,15 +748,15 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
 
     }
 
-  tt_inspector
+    tt_inspector
 
-}
+  }
 
-  if (var_inspector) ccInspector(ret)
+  if (var_inspector) ccInspector(tt)
 
 
   ret <- list(top = tt,
-              maps = list(base = p_base, polygons = p))
+              maps = list(base = tt$env$p_base, polygons = tt$env$p))
 
   return(invisible(ret))
 
