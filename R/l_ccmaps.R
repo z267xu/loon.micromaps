@@ -73,6 +73,7 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                      cond1var, cond1var.lab = NULL,
                      cond2var, cond2var.lab = NULL,
                      respbreaks = 3,
+                     # scale = c('unchanged', 'percent', 'log'),
                      size = 10, seg1col = 'blue', seg2col = 'darkgrey', seg3col = 'red',
                      optimize = FALSE, otry = 10,
                      title = "CCmaps") {
@@ -190,14 +191,6 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     stop("title must be a character string")
   }
 
-
-  get_pct <- function(val, rng) {
-    (val - rng[1])/diff(rng) * 100
-  }
-
-  get_number <- function(pct, rng) {
-    pct * 0.01 * diff(rng) + rng[1]
-  }
 
 
   # Data prep -----
@@ -419,20 +412,11 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     respcuts <- c(as.numeric(tkcget(tt$env$scaletop, "-min")),
                   as.numeric(tkcget(tt$env$scaletop, "-max")))
 
-    respcuts <- c(get_number(respcuts[1], range(resp)),
-                  get_number(respcuts[2], range(resp)))
-
     cond1cuts <- c(as.numeric(tkcget(tt$env$scaleright, "-min")),
                    as.numeric(tkcget(tt$env$scaleright, "-max")))
 
-    cond1cuts <- c(get_number(cond1cuts[1], range(cond1)),
-                   get_number(cond1cuts[2], range(cond1)))
-
     cond2cuts <- c(as.numeric(tkcget(tt$env$scalebottom, "-min")),
                    as.numeric(tkcget(tt$env$scalebottom, "-max")))
-
-    cond2cuts <- c(get_number(cond2cuts[1], range(cond2)),
-                   get_number(cond2cuts[2], range(cond2)))
 
 
     resp_cat <- cut_interval(resp, respcuts)
@@ -462,9 +446,9 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
     cond1cuts <- attr(spdf@data$cond1_cat, 'cuts')
     cond2cuts <- attr(spdf@data$cond2_cat, 'cuts')
 
-    tcl(tt$env$scaletop, 'configure', min = respcuts[1] %>% get_pct(., range(resp)), max = respcuts[2] %>% get_pct(., range(resp)))
-    tcl(tt$env$scaleright, 'configure', min = cond1cuts[1] %>% get_pct(., range(cond1)), max = cond1cuts[2] %>% get_pct(., range(cond1)))
-    tcl(tt$env$scalebottom, 'configure', min = cond2cuts[1] %>% get_pct(., range(cond2)), max = cond2cuts[2] %>% get_pct(., range(cond2)))
+    tcl(tt$env$scaletop, 'configure', min = respcuts[1], max = respcuts[2])
+    tcl(tt$env$scaleright, 'configure', min = cond1cuts[1], max = cond1cuts[2])
+    tcl(tt$env$scalebottom, 'configure', min = cond2cuts[1], max = cond2cuts[2])
 
 
     orig_df <- data_wcol(resp = resp, resp_cat = spdf@data$resp_cat,
@@ -482,10 +466,9 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                               text = ifelse(is.null(respvar.lab), respvar, respvar.lab))
 
   tt$env$scaletop <- tcl('::minmax_scale2', l_subwin(tt, 'scaletop'),
-                         from = 0, to = 100,
-                         from_text = min(resp), to_text = max(resp),
-                         min = attr(spdf@data$resp_cat, 'cuts')[1] %>% get_pct(., range(resp)),
-                         max = attr(spdf@data$resp_cat, 'cuts')[2] %>% get_pct(., range(resp)),
+                         from = min(resp), to = max(resp),
+                         min = attr(spdf@data$resp_cat, 'cuts')[1],
+                         max = attr(spdf@data$resp_cat, 'cuts')[2],
                          resolution = 0.1, orient = 'horizontal',
                          seg1col = seg1col, seg2col = seg2col, seg3col = seg3col)
 
@@ -495,10 +478,9 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                                 text = ifelse(is.null(cond1var.lab), cond1var, cond1var.lab))
 
   tt$env$scaleright <- tcl('::minmax_scale2', l_subwin(tt, 'scaleright'),
-                           from = 0, to = 100,
-                           from_text = min(cond1), to_text = max(cond1),
-                           min = attr(spdf@data$cond1_cat, 'cuts')[1] %>% get_pct(., range(cond1)),
-                           max = attr(spdf@data$cond1_cat, 'cuts')[2] %>% get_pct(., range(cond1)),
+                           from = min(cond1), to = max(cond1),
+                           min = attr(spdf@data$cond1_cat, 'cuts')[1],
+                           max = attr(spdf@data$cond1_cat, 'cuts')[2],
                            resolution = 0.1, orient="vertical")
 
 
@@ -506,10 +488,9 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
                                  text = ifelse(is.null(cond2var.lab), cond2var, cond2var.lab))
 
   tt$env$scalebottom <- tcl('::minmax_scale2', l_subwin(tt, 'scalebottom'),
-                            from = 0, to = 100,
-                            from_text = min(cond2), to_text = max(cond2),
-                            min = attr(spdf@data$cond2_cat, 'cuts')[1] %>% get_pct(., range(cond2)),
-                            max = attr(spdf@data$cond2_cat, 'cuts')[2] %>% get_pct(., range(cond2)),
+                            from = min(cond2), to = max(cond2),
+                            min = attr(spdf@data$cond2_cat, 'cuts')[1],
+                            max = attr(spdf@data$cond2_cat, 'cuts')[2],
                             resolution = 0.1, orient = "horizontal")
 
   tcl(tt$env$scaletop, 'configure', command = function(...) updateGraph())
@@ -682,16 +663,13 @@ l_ccmaps <- function(tt = tktoplevel(), var_inspector = TRUE,
       tcl(submit, 'configure', state = 'disabled')
       tcl('tk', 'busy', tt_inspector)
 
-      print(tkcget(tt$env$scaletop, "-min"))
-      print(tkcget(tt$env$scaletop, "-max"))
-
       if (tclvalue(respvar_i) == respvar) {
 
         respvar_new <- respvar
 
         respbreaks_new <- c(min(resp),
-                            as.numeric(tkcget(tt$env$scaletop, "-min")) %>% get_number(., range(resp)),
-                            as.numeric(tkcget(tt$env$scaletop, "-max")) %>% get_number(., range(resp)),
+                            as.numeric(tkcget(tt$env$scaletop, "-min")),
+                            as.numeric(tkcget(tt$env$scaletop, "-max")),
                             max(resp))
 
       } else {
@@ -908,4 +886,52 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
     data.frame()
 
 }
+
+
+# Change scale from actual numbers to percent or log scale
+convert_act2scale <- function(scale = c('unchanged', 'percent', 'log'), val1, val2, vals = NULL) {
+
+  if (scale == 'unchanged') {
+
+    c(val1, val2) %>% pretty_scale()
+
+  } else if (scale == 'percent') {
+
+    c((val1 - min(vals))/(max(vals) - min(vals)),
+      (val2 - min(vals))/(max(vals) - min(vals))) %>% pretty_scale()
+
+  } else {
+
+    if (any(vals <= 0)) stop('Cannot use log scale for variables containing zero or negative values')
+
+    log(c(val1, val2)) %>% pretty_scale()
+
+  }
+
+}
+
+
+convert_scale2act <- function(scale = c('unchanged', 'percent', 'log'), s1, s2, vals = NULL) {
+
+  if (scale == 'unchanged') {
+
+    c(s1, s2) %>% pretty_scale()
+
+  } else if (scale == 'percent') {
+
+    min(vals) + c(pct1, pct2) * diff(range(vals)) %>% pretty_scale()
+
+  } else {
+
+    10^(c(s1, s2)) %>% pretty_scale()
+
+  }
+
+}
+
+
+pretty_scale <- function(val) {
+  round(val, 1)
+}
+
 

@@ -4,7 +4,7 @@
 \alias{l_micromaps}
 \title{Micromaps in loon}
 \usage{
-l_micromaps(tt = tktoplevel(), var_inspector = TRUE, spdf,
+l_micromaps(top = tktoplevel(), var_inspector = TRUE, spdf,
   grouping = NULL, n_groups = NULL, map.label = "Map",
   lab.label = "Labels", title = "Micromaps", variables = list(id.var =
   NULL, ...), num_optvars = NULL, spacing = c("equal", "max"),
