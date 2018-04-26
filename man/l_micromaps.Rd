@@ -4,12 +4,11 @@
 \alias{l_micromaps}
 \title{Linked micromaps in loon}
 \usage{
-l_micromaps(top = tktoplevel(), mm_inspector = TRUE, spdf,
-  grouping = NULL, n_groups = NULL, map.label = "Map",
-  lab.label = "Labels", title = "Micromaps", variables,
-  num_optvars = NULL, spacing = c("equal", "max"), color = NULL,
-  size = 6, linkingKey = NULL, linkingGroup = NULL, sync = c("pull",
-  "push"), ...)
+l_micromaps(top = tktoplevel(), mm_inspector = TRUE, map.label = "Map",
+  lab.label = "Labels", title = "Micromaps", spdf, grouping = NULL,
+  n_groups = NULL, variables, num_optvars = NULL, spacing = c("equal",
+  "max"), color = NULL, size = 6, linkingKey = NULL,
+  linkingGroup = NULL, sync = c("pull", "push"), ...)
 }
 \arguments{
 \item{top}{Tk top level window. Defaults to a new window}
@@ -17,6 +16,12 @@ l_micromaps(top = tktoplevel(), mm_inspector = TRUE, spdf,
 \item{mm_inspector}{Whether to draw custom inspector for micromaps, which
 allows for variable selection, variable label update, font size adjustment,
 and setting grouping of points. Defaults to TRUE}
+
+\item{map.label}{Label for maps (rightmost) panel}
+
+\item{lab.label}{Label for labels (leftmost) panel}
+
+\item{title}{Title for micromap. Appears in the title bar of the toplevel window}
 
 \item{spdf}{\code{SpatialPolygonsDataFrame} object to hold polygon coordinates
 and attributes. It should contain statistics used for comparing between regions}
@@ -27,12 +32,6 @@ have per row (from top to bottom of display)}
 \item{n_groups}{An optional integer specifying how many rows to have.
 If both \code{grouping} and \code{n_groups} are provided, \code{grouping}
 is applied}
-
-\item{map.label}{Label for maps (rightmost) panel}
-
-\item{lab.label}{Label for labels (leftmost) panel}
-
-\item{title}{Title for micromap. Appears in the title bar of the toplevel window}
 
 \item{variables}{List specifying variables to plot. Variable required: \code{id.var}
 and \code{grouping.var}. Optional variables: more variables to plot.
@@ -61,7 +60,7 @@ generated using \code{loon::loon_palette}}
 linkingKey value are linked together. Defaults to NULL, in which case the
 linkingKey values come from \code{id.var} values}
 
-\item{linkingGroup}{linking mechanism in \code{loon}. Displays with the same
+\item{linkingGroup}{Linking mechanism in \code{loon}. Displays with the same
 linkingGroup are linked together. Defaults to NULL, in which case the
 linkingGroup is "Micromaps"}
 
@@ -85,8 +84,8 @@ data("edPov")
 
 USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb')
 
-mm <- l_micromaps(spdf = USstates,
-                  lab.label = 'States',
+mm <- l_micromaps(lab.label = 'States',
+                  spdf = USstates,
                   variables = list(id.var = 'ST_NAME',
                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
                                    var2 = list(name = 'ed', xlab = 'Percent')),

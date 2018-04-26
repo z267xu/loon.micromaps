@@ -7,6 +7,9 @@
 #' @param mm_inspector Whether to draw custom inspector for micromaps, which
 #'   allows for variable selection, variable label update, font size adjustment,
 #'   and setting grouping of points. Defaults to TRUE
+#' @param map.label Label for maps (rightmost) panel
+#' @param lab.label Label for labels (leftmost) panel
+#' @param title Title for micromap. Appears in the title bar of the toplevel window
 #' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
 #'   and attributes. It should contain statistics used for comparing between regions
 #' @param grouping An optional character vector specifying how many points to
@@ -14,9 +17,6 @@
 #' @param n_groups An optional integer specifying how many rows to have.
 #'   If both \code{grouping} and \code{n_groups} are provided, \code{grouping}
 #'   is applied
-#' @param map.label Label for maps (rightmost) panel
-#' @param lab.label Label for labels (leftmost) panel
-#' @param title Title for micromap. Appears in the title bar of the toplevel window
 #' @param variables List specifying variables to plot. Variable required: \code{id.var}
 #'   and \code{grouping.var}. Optional variables: more variables to plot.
 #'   \code{id.var} specifies the names of points. The \code{grouping.var} is
@@ -38,7 +38,7 @@
 #' @param linkingKey Linking mechanism in \code{loon}. Points with the same
 #'   linkingKey value are linked together. Defaults to NULL, in which case the
 #'   linkingKey values come from \code{id.var} values
-#' @param linkingGroup linking mechanism in \code{loon}. Displays with the same
+#' @param linkingGroup Linking mechanism in \code{loon}. Displays with the same
 #'   linkingGroup are linked together. Defaults to NULL, in which case the
 #'   linkingGroup is "Micromaps"
 #' @param sync Can be either 'pull' or 'push', determines whether the initial
@@ -63,8 +63,8 @@
 #'
 #' USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb')
 #'
-#' mm <- l_micromaps(spdf = USstates,
-#'                   lab.label = 'States',
+#' mm <- l_micromaps(lab.label = 'States',
+#'                   spdf = USstates,
 #'                   variables = list(id.var = 'ST_NAME',
 #'                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
 #'                                    var2 = list(name = 'ed', xlab = 'Percent')),
@@ -76,8 +76,9 @@
 #' }
 #'
 l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
-                        spdf, grouping = NULL, n_groups = NULL,
                         map.label = 'Map', lab.label = 'Labels', title = 'Micromaps',
+                        spdf,
+                        grouping = NULL, n_groups = NULL,
                         variables, num_optvars = NULL,
                         spacing = c('equal', 'max'), color = NULL, size = 6,
                         linkingKey = NULL, linkingGroup = NULL, sync = c('pull', 'push'), ...) {

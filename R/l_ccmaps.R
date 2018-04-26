@@ -7,6 +7,8 @@
 #' @param cc_inspector Whether to draw the custom inspector for CCmaps, which
 #'   allows for variable selection, variable label update, font size adjustment
 #'   and option to optimize \eqn{R^2}. Defaults to TRUE
+#' @param title Title of the map. Appears in the title bar of the toplevel window.
+#'   Defaults to "CCmaps"
 #' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
 #'   and attributes. It should contain all variables used in analysis
 #' @param respvar Name of the response value variable
@@ -24,7 +26,7 @@
 #'   for coloring scheme. It can either be the integer 3 or a numeric vector of
 #'   four break points. Defaults to 3, in which case the response values are divided
 #'   into tertiles
-#' @param size Font size for \eqn{R^2} values on the map. Defaults to size 10
+#' @param size Font size for model value labels and\eqn{R^2}. Defaults to size 10
 #' @param seg1col Color of first interval of points by \code{respvar} value.
 #'   Defaults to 'blue'
 #' @param seg2col Color of second interval of points by \code{respvar} value.
@@ -38,10 +40,8 @@
 #'   for optimization (see above). Required if \code{optimize = TRUE}.
 #'   Defaults to 10. A higher \code{otry} value leads to more precise estimates
 #'   at the cost of longer computation time
-#' @param title Title of the map. Appears in the title bar of the toplevel window.
-#'   Defaults to "CCmaps"
 #'
-#' @importFrom dplyr mutate mutate_at rowwise funs
+#' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select
 #' @importFrom magrittr %>%
 #'
 #' @export
@@ -56,10 +56,10 @@
 #' columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 #'
 #' ## Plot
-#' l_ccmaps(spdf = columbus,
+#' l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
+#'          spdf = columbus,
 #'          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
-#'          optimize = TRUE,
-#'          title = "Columbus Residential Burglaries and Vehicle Thefts")
+#'          optimize = TRUE)
 #'
 #'
 #' ### Example 2
@@ -76,23 +76,22 @@
 #' nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) + sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
 #'
 #' ## Plot
-#' l_ccmaps(spdf = nc.sids,
+#' l_ccmaps(title = "North Carolina SIDS Rates",
+#'          spdf = nc.sids,
 #'          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
-#'          optimize = FALSE,
-#'          title = "North Carolina SIDS Rates")
+#'          optimize = FALSE)
 #'
 #'}
 #'
 l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
-                     spdf,
+                     title = "CCmaps", spdf,
                      respvar, respvar.lab = NULL,
                      cond1var, cond1var.lab = NULL,
                      cond2var, cond2var.lab = NULL,
                      respbreaks = 3,
                      # scale = c('unchanged', 'percent', 'log'),
                      size = 10, seg1col = 'blue', seg2col = 'darkgrey', seg3col = 'red',
-                     optimize = FALSE, otry = 10,
-                     title = "CCmaps") {
+                     optimize = FALSE, otry = 10) {
 
 
   # Input checks -----
@@ -759,10 +758,8 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
 ## Helper Functions -----
 
-#' Partitions x (numeric vector) into up to three intervals, with break points
-#'   defined by the minimum, cut_lwr, cut_upr and maximum.
-#'   Break points need not be unique
-#'
+# Partitions x (numeric vector) into up to intervals, with break points
+# defined by cuts. Break points need not be unique
 cut_interval <- function(x, cuts) {
 
   cut(x,
@@ -772,9 +769,7 @@ cut_interval <- function(x, cuts) {
 }
 
 
-#' Renames the levels for a vector of factors levels from '1' up to '3'
-#'   depending on the number of existing levels in use
-#'
+# Renames the levels of a vector of factors levels to numbers
 assign_levels <- function(x) {
 
   if (is.factor(x)) x <- droplevels(x)
@@ -784,10 +779,9 @@ assign_levels <- function(x) {
 }
 
 
-#' Determines the colors to use for coloring regions. Needed since there might
-#'   not be three categories for the study variable (e.g. when the first and
-#'   second break point are equal)
-#'
+# Determines the colors to use for polygons on maps. Needed since there might
+# not be three categories for the study variable (e.g. when the first and
+# second break point are equal)
 assign_colors <- function(var, cuts, seg1col, seg2col, seg3col) {
 
   min <- min(var)
@@ -841,13 +835,9 @@ r2_calc <- function(x, group) {
 }
 
 
-#' Computes the R^2 measures by trying a number of possible partitioning points
-#'   on the two conditioning variables, and returns the results in a data.frame
-#'   sorted in decreasing order by the R^2
-#'
-#' @importFrom dplyr arrange transmute mutate_all rowwise
-#' @importFrom magrittr %>%
-#'
+# Computes the R^2 measures by trying a number of possible partitioning points
+# on the two conditioning variables, and returns the results in a data.frame
+# sorted in decreasing order by R^2
 r2_optimize <- function(otry, resp, cond1, cond2) {
 
   # otry number of values to try for each conditioning variable. Picks {otry choose 2} pairs (since
@@ -888,8 +878,6 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
 
     gr <- paste0(cond1_cat, cond2_cat)
 
-    # if (!is.null(spdf@plotOrder)) gr <- gr[spdf@plotOrder, ]
-
     r2_calc(resp, gr)
 
   }, list(resp), list(cond1), list(cond2),
@@ -904,52 +892,52 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
 }
 
 
-# Change scale from actual numbers to percent or log scale
-convert_act2scale <- function(scale = c('unchanged', 'percent', 'log'), val1, val2, vals = NULL) {
+# # Change scale from actual numbers to percent or log scale
+# convert_act2scale <- function(scale = c('unchanged', 'percent', 'log'), val1, val2, vals = NULL) {
+#
+#   if (scale == 'unchanged') {
+#
+#     c(val1, val2) %>% pretty_scale()
+#
+#   } else if (scale == 'percent') {
+#
+#     c((val1 - min(vals))/(max(vals) - min(vals)),
+#       (val2 - min(vals))/(max(vals) - min(vals))) %>% pretty_scale()
+#
+#   } else {
+#
+#     if (any(vals <= 0)) stop('Cannot use log scale for variables containing zero or negative values')
+#
+#     log(c(val1, val2)) %>% pretty_scale()
+#
+#   }
+#
+# }
+#
+#
+# convert_scale2act <- function(scale = c('unchanged', 'percent', 'log'), s1, s2, vals = NULL) {
+#
+#   if (scale == 'unchanged') {
+#
+#     c(s1, s2) %>% pretty_scale()
+#
+#   } else if (scale == 'percent') {
+#
+#     min(vals) + c(pct1, pct2) * diff(range(vals)) %>% pretty_scale()
+#
+#   } else {
+#
+#     10^(c(s1, s2)) %>% pretty_scale()
+#
+#   }
+#
+# }
 
-  if (scale == 'unchanged') {
 
-    c(val1, val2) %>% pretty_scale()
-
-  } else if (scale == 'percent') {
-
-    c((val1 - min(vals))/(max(vals) - min(vals)),
-      (val2 - min(vals))/(max(vals) - min(vals))) %>% pretty_scale()
-
-  } else {
-
-    if (any(vals <= 0)) stop('Cannot use log scale for variables containing zero or negative values')
-
-    log(c(val1, val2)) %>% pretty_scale()
-
-  }
-
-}
-
-
-convert_scale2act <- function(scale = c('unchanged', 'percent', 'log'), s1, s2, vals = NULL) {
-
-  if (scale == 'unchanged') {
-
-    c(s1, s2) %>% pretty_scale()
-
-  } else if (scale == 'percent') {
-
-    min(vals) + c(pct1, pct2) * diff(range(vals)) %>% pretty_scale()
-
-  } else {
-
-    10^(c(s1, s2)) %>% pretty_scale()
-
-  }
-
-}
-
-
+# Round values to 1 decimal place and pervent scientific notation
 pretty_scale <- function(val) {
   round(val, 1) %>%
     format(scientific = F) %>%
     as.numeric()
 }
-
 

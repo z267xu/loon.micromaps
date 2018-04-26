@@ -4,11 +4,10 @@
 \alias{l_ccmaps}
 \title{Conditioned choropleth maps in loon}
 \usage{
-l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, spdf, respvar,
-  respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
+l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
+  respvar, respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
   cond2var.lab = NULL, respbreaks = 3, size = 10, seg1col = "blue",
-  seg2col = "darkgrey", seg3col = "red", optimize = FALSE, otry = 10,
-  title = "CCmaps")
+  seg2col = "darkgrey", seg3col = "red", optimize = FALSE, otry = 10)
 }
 \arguments{
 \item{tt}{Tk top level window. Defaults to a new window}
@@ -16,6 +15,9 @@ l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, spdf, respvar,
 \item{cc_inspector}{Whether to draw the custom inspector for CCmaps, which
 allows for variable selection, variable label update, font size adjustment
 and option to optimize \eqn{R^2}. Defaults to TRUE}
+
+\item{title}{Title of the map. Appears in the title bar of the toplevel window.
+Defaults to "CCmaps"}
 
 \item{spdf}{\code{SpatialPolygonsDataFrame} object to hold polygon coordinates
 and attributes. It should contain all variables used in analysis}
@@ -36,7 +38,7 @@ for coloring scheme. It can either be the integer 3 or a numeric vector of
 four break points. Defaults to 3, in which case the response values are divided
 into tertiles}
 
-\item{size}{Font size for \eqn{R^2} values on the map. Defaults to size 10}
+\item{size}{Font size for model value labels and\eqn{R^2}. Defaults to size 10}
 
 \item{seg1col}{Color of first interval of points by \code{respvar} value.
 Defaults to 'blue'}
@@ -55,9 +57,6 @@ in which case the conditioning data is divided into tertiles}
 for optimization (see above). Required if \code{optimize = TRUE}.
 Defaults to 10. A higher \code{otry} value leads to more precise estimates
 at the cost of longer computation time}
-
-\item{title}{Title of the map. Appears in the title bar of the toplevel window.
-Defaults to "CCmaps"}
 
 \item{cond1.lab}{Label for first conditional variable for slider. Defaults to NULL,
 in which case \code{cond1} is used}
@@ -78,10 +77,10 @@ library(rgdal)
 columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 
 ## Plot
-l_ccmaps(spdf = columbus,
+l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
+         spdf = columbus,
          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
-         optimize = TRUE,
-         title = "Columbus Residential Burglaries and Vehicle Thefts")
+         optimize = TRUE)
 
 
 ### Example 2
@@ -98,10 +97,10 @@ nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) + sqrt((nc.sid
 nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) + sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
 
 ## Plot
-l_ccmaps(spdf = nc.sids,
+l_ccmaps(title = "North Carolina SIDS Rates",
+         spdf = nc.sids,
          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
-         optimize = FALSE,
-         title = "North Carolina SIDS Rates")
+         optimize = FALSE)
 
 }
 

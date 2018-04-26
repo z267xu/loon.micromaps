@@ -29,8 +29,8 @@ cd_southon@data <- merge(cd_southon@data, canada_data,
 
 
 # Draw micromaps -----
-mm <- l_micromaps(spdf = cd_southon,
-                  lab.label = 'Census Divisions',
+mm <- l_micromaps(lab.label = 'Census Divisions',
+                  spdf = cd_southon,
                   variables = list(id.var = 'CDNAME',
                                    grouping.var = list(name = 'pct_immigrants',
                                                        xlab = NULL,
