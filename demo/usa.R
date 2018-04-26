@@ -17,7 +17,9 @@ mm <- l_micromaps(spdf = USstates,
                                    grouping.var = list(name = 'lung_bronch_death'),
                                    var2 = list(name = 'pm25', label = 'Fine Particulate Matter Level'),
                                    var3 = list(name = 'income', label = 'Income per Capita')),
-                  linkingGroup = 'States', sync = 'push')
+                  linkingGroup = 'States', sync = 'push',
+                  spacing = 'max',
+                  showItemLabels = TRUE, itemLabel = as.character(USstates@data$ST_NAME))
 
 
 # Draw CCmaps -----

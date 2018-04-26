@@ -1,5 +1,6 @@
 
-
+# Performs variable input checks (type, length, existence in dataset provided),
+# and returns list providing the variable name, variable axis label and variable label
 variable_check <- function(spdf, nm, variable) {
 
   if (!('name' %in% names(variable))) {
@@ -33,3 +34,4 @@ variable_check <- function(spdf, nm, variable) {
   return(list(name = name, xlab = xlab, label = label))
 
 }
+

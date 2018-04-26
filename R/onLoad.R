@@ -1,5 +1,6 @@
 
 # Load code for modified minmaxscale (slider with 2 handles)
+
 .onLoad <- function(libname, pkgname) {
 
   ## Modified MinMaxSlider
@@ -136,8 +137,10 @@
 
     method Redraw {} {
 
+
     set w [winfo width $canvas]
     set h [winfo height $canvas]
+
 
     $canvas delete all
     set x0 $b_w

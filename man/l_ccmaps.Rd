@@ -2,16 +2,29 @@
 % Please edit documentation in R/l_ccmaps.R
 \name{l_ccmaps}
 \alias{l_ccmaps}
-\title{Conditioned choropleth maps}
+\title{Conditioned choropleth maps in loon}
 \usage{
-l_ccmaps(tt = tktoplevel(), var_inspector = TRUE, spdf, respvar,
+l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, spdf, respvar,
   respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
   cond2var.lab = NULL, respbreaks = 3, size = 10, seg1col = "blue",
   seg2col = "darkgrey", seg3col = "red", optimize = FALSE, otry = 10,
   title = "CCmaps")
 }
 \arguments{
+\item{tt}{Tk top level window, used for the inspector to use the same window.
+Defaults to a new window}
+
+\item{cc_inspector}{Whether to draw the custom inspector for micromaps, which
+allows for variable selection, variable label update, font size adjustment
+and whether to optimize R^2. Defaults to TRUE}
+
+\item{spdf}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
+including values for variables used for determining map coloring and panel positioning}
+
 \item{respvar}{character name of the response value variable}
+
+\item{respvar.lab}{Label for response value variable for slider. Defaults to NULL,
+in which case respvar name is used}
 
 \item{cond1var}{character name of the first conditioning variable (controls
 panel assignment in the vertical direction)}
@@ -22,6 +35,8 @@ panel assignment in the horizontal direction)}
 \item{respbreaks}{determines how the response data is divided into three groups.
 Can either be the integer 3 or a numeric vector of four break points.
 Defaults to 3, in which case the response values are divided into tertiles}
+
+\item{size}{Font size for R^2 values on maps. Defaults to size 10}
 
 \item{optimize}{logical value indicating whether panel assignment should be optimized
 for \eqn{R^2}. Defaults to FALSE, in which case the conditioning data is
@@ -35,8 +50,11 @@ at the cost of longer computation time}
 \item{title}{character string of the title of the map. Appears in the title bar
 of the plot window. Defaults to "CCmaps"}
 
-\item{data}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
-including values for variables used for determining map coloring and panel positioning}
+\item{cond1.lab}{Label for first conditional variable for slider. Defaults to NULL,
+in which case cond1 name is used}
+
+\item{cond2.lab}{Label for second conditional variable for slider. Defaults to NULL,
+in which case cond1 name is used}
 }
 \description{
 2-way panel of maps for visualizing multivariate data analysis

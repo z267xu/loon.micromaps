@@ -4,15 +4,77 @@
 \alias{l_micromaps}
 \title{Micromaps in loon}
 \usage{
-l_micromaps(top = tktoplevel(), var_inspector = TRUE, spdf,
+l_micromaps(top = tktoplevel(), mm_inspector = TRUE, spdf,
   grouping = NULL, n_groups = NULL, map.label = "Map",
-  lab.label = "Labels", title = "Micromaps", variables = list(id.var =
-  NULL, ...), num_optvars = NULL, spacing = c("equal", "max"),
-  color = NULL, size = 6, linkingKey = NULL, linkingGroup = NULL,
-  sync = c("pull", "push"), ...)
+  lab.label = "Labels", title = "Micromaps", variables,
+  num_optvars = NULL, spacing = c("equal", "max"), color = NULL,
+  size = 6, linkingKey = NULL, linkingGroup = NULL, sync = c("pull",
+  "push"), ...)
+}
+\arguments{
+\item{top}{Tk top level window, used for the inspector to use the same window.
+Defaults to a new window}
+
+\item{mm_inspector}{Whether to draw custom inspector for micromaps, which
+allows for variable selection, variable label update, fontsize adjustment,
+and grouping of regions. Defaults to TRUE}
+
+\item{spdf}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
+including statistics used for comparing between regions}
+
+\item{grouping}{An optional character vector specifying how many points per
+row (top to bottom row)}
+
+\item{n_groups}{An optional number specifying how many rows to have.
+If both \code{gropuing} and \code{n_groups} are provided, \code{grouping}
+is applied}
+
+\item{map.label}{Label for maps (rightmost) panel}
+
+\item{lab.label}{Label for labels (leftmost) panel}
+
+\item{title}{Title for the micromap. Appears on the bar of the toplevel window}
+
+\item{variables}{Variables containing statistics to compare. List form, with
+one element per variable. Variables required: \code{grouping.var}. Optional
+variables: \code{id.var} and other variables to plot.
+The \code{grouping.var} is used to decide the ordering of variables on the map.
+All variables, with the exception of \code{id.var}, should be a list with
+\code{name}, and optional \code{xlab} and \code{label} arguments. For example,
+for a variable named 'ed' used for grouping, this could be
+\code{variables = list(grouping.var = list(name = "ed", xlab = "Percent", label = "\% with University Education"))}}
+
+\item{num_optvars}{Number of slots to leave for optional variables in
+\code{mm_inspector}. Defaults to NULL, in which case it is determined
+based on how many variables are provided in \code{variable}}
+
+\item{spacing}{Spacing scheme for points - either 'equal' or 'max'. 'equal'
+spaces points out equally, while 'max' ensures same amount of spacing between
+points as the row with the maximum number of rows}
+
+\item{color}{Color scheme. Defaults to NULL, in which case the colors are
+automatically generated using \code{loon::loon_palette}}
+
+\item{size}{Size of glyphs for scatterplots and label panel. Defaults to 6}
+
+\item{linkingKey}{linking mechanism in \code{loon}. Points with the same
+linkingKey value are linked together. Defaults to NULL, in which case the
+linkingKey values come from \code{id.var} values}
+
+\item{linkingGroup}{linking mechanism in \code{loon}. Displays with the same
+linkingGroup are linked together. Defaults to NULL, in which case the
+linkingGroup is "Micromaps"}
+
+\item{sync}{Can be either 'pull' or 'push', determines whehter the initial
+synchronization should adapt to the linked states of other linked plots ('pull)
+or whether it should overwrite the states of the other linked plot with its
+own linked states ('push)}
+
+\item{...}{Other optional named arguments to modify plot states of scatterplots}
 }
 \description{
-Micromaps in loon
+Sets up multiple panels for comparing different statistics
+  across geographical regions for visualizing multivariate data analysis
 }
 \examples{
 \dontrun{

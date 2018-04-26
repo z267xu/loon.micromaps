@@ -1,6 +1,9 @@
 
-#' Allocate groups
-#'
+# Allocate points to rows based on grouping, number of groups (n_groups) or total number of data points
+# If grouping is provided, use it
+# If n_groups is provided, assign ceiling(n/n_groups) points to first (n_groups - 1) groups,
+# and assign remainder to last row
+# If only the total number of points is supplied, uses pretty_groupings function
 allocate_group <- function(n_groups, grouping, n) {
 
   if (!is.null(grouping)) {
@@ -29,6 +32,8 @@ allocate_group <- function(n_groups, grouping, n) {
 }
 
 
+# Come up with an aesthetically pleasing allocation of points to groups
+# Avoids having too few points per group (min 5) or too many rows (max 7)
 pretty_groupings <- function(n, min_num_per_group = 5, max_n_groups = 7) {
 
   if (n < 5) {
