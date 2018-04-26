@@ -1,41 +1,45 @@
 
-## Main function -----
-
 #' @title Conditioned choropleth maps in loon
 #'
-#' @description 2-way panel of maps for visualizing multivariate data analysis
+#' @description 2-way panel of maps for visualizing multivariate data
 #'
-#' @param tt Tk top level window, used for the inspector to use the same window.
-#'   Defaults to a new window
-#' @param cc_inspector Whether to draw the custom inspector for micromaps, which
+#' @param tt Tk top level window. Defaults to a new window
+#' @param cc_inspector Whether to draw the custom inspector for CCmaps, which
 #'   allows for variable selection, variable label update, font size adjustment
-#'   and whether to optimize R^2. Defaults to TRUE
-#' @param spdf SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
-#'   including values for variables used for determining map coloring and panel positioning
-#' @param respvar character name of the response value variable
+#'   and option to optimize \eqn{R^2}. Defaults to TRUE
+#' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
+#'   and attributes. It should contain all variables used in analysis
+#' @param respvar Name of the response value variable
 #' @param respvar.lab Label for response value variable for slider. Defaults to NULL,
-#'   in which case respvar name is used
-#' @param cond1var character name of the first conditioning variable (controls
+#'   in which case \code{respvar} is used
+#' @param cond1var Name of the first conditioning variable (controls
 #'   panel assignment in the vertical direction)
 #' @param cond1.lab Label for first conditional variable for slider. Defaults to NULL,
-#'   in which case cond1 name is used
-#' @param cond2var character name of the second conditioning variable (controls
+#'   in which case \code{cond1} is used
+#' @param cond2var Name of the second conditioning variable (controls
 #'   panel assignment in the horizontal direction)
 #' @param cond2.lab Label for second conditional variable for slider. Defaults to NULL,
-#'   in which case cond1 name is used
-#' @param respbreaks determines how the response data is divided into three groups.
-#'   Can either be the integer 3 or a numeric vector of four break points.
-#'   Defaults to 3, in which case the response values are divided into tertiles
-#' @param size Font size for R^2 values on maps. Defaults to size 10
-#' @param optimize logical value indicating whether panel assignment should be optimized
-#'   for \eqn{R^2}. Defaults to FALSE, in which case the conditioning data is
-#'   divided into tertiles
-#' @param otry integer (greater than 0) indicating number of values to try
+#'   in which case \code{cond2} is used
+#' @param respbreaks Determines how the response data is divided into three groups
+#'   for coloring scheme. It can either be the integer 3 or a numeric vector of
+#'   four break points. Defaults to 3, in which case the response values are divided
+#'   into tertiles
+#' @param size Font size for \eqn{R^2} values on the map. Defaults to size 10
+#' @param seg1col Color of first interval of points by \code{respvar} value.
+#'   Defaults to 'blue'
+#' @param seg2col Color of second interval of points by \code{respvar} value.
+#'   Defaults to 'darkgrey'
+#' @param seg3col Color of third interval of points by \code{respvar} value.
+#'   Defaults to 'red'
+#' @param optimize Logical value indicating whether panel assignment should be
+#'   optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE,
+#'   in which case the conditioning data is divided into tertiles
+#' @param otry Integer (greater than 0) indicating number of values to try
 #'   for optimization (see above). Required if \code{optimize = TRUE}.
 #'   Defaults to 10. A higher \code{otry} value leads to more precise estimates
 #'   at the cost of longer computation time
-#' @param title character string of the title of the map. Appears in the title bar
-#'   of the plot window. Defaults to "CCmaps"
+#' @param title Title of the map. Appears in the title bar of the toplevel window.
+#'   Defaults to "CCmaps"
 #'
 #' @importFrom dplyr mutate mutate_at rowwise funs
 #' @importFrom magrittr %>%
@@ -45,7 +49,7 @@
 #' @examples
 #'\dontrun{
 #'
-#' ## Example 1
+#' ### Example 1
 #' ## Get data
 #' library(maptools)
 #' library(rgdal)
@@ -58,7 +62,7 @@
 #'          title = "Columbus Residential Burglaries and Vehicle Thefts")
 #'
 #'
-#' ## Example 2
+#' ### Example 2
 #' ## Get data
 #' library(maptools)
 #' library(rgdal)
@@ -544,7 +548,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   ccInspector <- function(w) {
 
     tt_inspector <- tktoplevel()
-    tktitle(tt_inspector) <- 'CCmaps Variable Selector'
+    tktitle(tt_inspector) <- 'CCmaps Inspector'
 
     overall <- tkframe(tt_inspector)
     var_selector <- tkframe(overall, relief = 'groove', borderwidth = 3)
@@ -562,7 +566,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                                   textvariable = respvar_i,
                                   state = 'readonly')
     respvar.lab_i <- tclVar(ifelse(is.null(respvar.lab), '', respvar.lab))
-    entry.respvar.lab <- tkentry(var_selector, textvariable = respvar.lab_i, width = 20)
+    entry.respvar.lab <- tkentry(var_selector, textvariable = respvar.lab_i, width = 30)
 
 
 
@@ -571,7 +575,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                                 textvariable = cond1var_i,
                                 state = 'readonly')
     cond1var.lab_i <- tclVar(ifelse(is.null(cond1var.lab), '', cond1var.lab))
-    entry.cond1var.lab <- tkentry(var_selector, textvariable = cond1var.lab_i, width = 20)
+    entry.cond1var.lab <- tkentry(var_selector, textvariable = cond1var.lab_i, width = 30)
 
 
     cond2var_i <- tclVar(cond2var)
@@ -579,7 +583,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                                 textvariable = cond2var_i,
                                 state = 'readonly')
     cond2var.lab_i <- tclVar(ifelse(is.null(cond2var.lab), '', cond2var.lab))
-    entry.cond2var.lab <- tkentry(var_selector, textvariable = cond2var.lab_i, width = 20)
+    entry.cond2var.lab <- tkentry(var_selector, textvariable = cond2var.lab_i, width = 30)
 
 
 

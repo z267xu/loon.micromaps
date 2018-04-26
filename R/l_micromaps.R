@@ -1,52 +1,51 @@
 
-#' @title Micromaps in loon
+#' @title Linked micromaps in loon
 #'
-#' @description Sets up multiple panels for comparing different statistics
-#'   across geographical regions for visualizing multivariate data analysis
+#' @description Compares different statistics across geographical regions
 #'
-#' @param top Tk top level window, used for the inspector to use the same window.
-#'   Defaults to a new window
+#' @param top Tk top level window. Defaults to a new window
 #' @param mm_inspector Whether to draw custom inspector for micromaps, which
-#'   allows for variable selection, variable label update, fontsize adjustment,
-#'   and grouping of regions. Defaults to TRUE
-#' @param spdf SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
-#'   including statistics used for comparing between regions
-#' @param grouping An optional character vector specifying how many points per
-#'   row (top to bottom row)
-#' @param n_groups An optional number specifying how many rows to have.
-#'   If both \code{gropuing} and \code{n_groups} are provided, \code{grouping}
+#'   allows for variable selection, variable label update, font size adjustment,
+#'   and setting grouping of points. Defaults to TRUE
+#' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
+#'   and attributes. It should contain statistics used for comparing between regions
+#' @param grouping An optional character vector specifying how many points to
+#'   have per row (from top to bottom of display)
+#' @param n_groups An optional integer specifying how many rows to have.
+#'   If both \code{grouping} and \code{n_groups} are provided, \code{grouping}
 #'   is applied
 #' @param map.label Label for maps (rightmost) panel
 #' @param lab.label Label for labels (leftmost) panel
-#' @param title Title for the micromap. Appears on the bar of the toplevel window
-#' @param variables Variables containing statistics to compare. List form, with
-#'   one element per variable. Variables required: \code{grouping.var}. Optional
-#'   variables: \code{id.var} and other variables to plot.
-#'   The \code{grouping.var} is used to decide the ordering of variables on the map.
-#'   All variables, with the exception of \code{id.var}, should be a list with
-#'   \code{name}, and optional \code{xlab} and \code{label} arguments. For example,
-#'   for a variable named 'ed' used for grouping, this could be
+#' @param title Title for micromap. Appears in the title bar of the toplevel window
+#' @param variables List specifying variables to plot. Variable required: \code{id.var}
+#'   and \code{grouping.var}. Optional variables: more variables to plot.
+#'   \code{id.var} specifies the names of points. The \code{grouping.var} is
+#'   used to decide the ordering of points on the map. All variables,
+#'   with the exception of \code{id.var}, should be a list with \code{name},
+#'   and optional \code{xlab} and optional \code{label} arguments.
+#'   For example, for a variable named 'ed' used for grouping, the \code{variables}
+#'   argument would look like:
 #'   \code{variables = list(grouping.var = list(name = "ed", xlab = "Percent", label = "\% with University Education"))}
-#' @param num_optvars Number of slots to leave for optional variables in
-#'   \code{mm_inspector}. Defaults to NULL, in which case it is determined
-#'   based on how many variables are provided in \code{variable}
+#' @param num_optvars Number of possible optional variables for \code{mm_inspector}.
+#'   Defaults to NULL, in which case it is determined based on how many variables are
+#'   provided to \code{variables}
 #' @param spacing Spacing scheme for points - either 'equal' or 'max'. 'equal'
 #'   spaces points out equally, while 'max' ensures same amount of spacing between
-#'   points as the row with the maximum number of rows
-#' @param color Color scheme. Defaults to NULL, in which case the colors are
-#'   automatically generated using \code{loon::loon_palette}
+#'   points as the row with the largest number of points
+#' @param color Color scheme. Defaults to NULL, in which case colors are
+#'   generated using \code{loon::loon_palette}
 #' @param size Size of glyphs for scatterplots and label panel. Defaults to 6
-#' @param linkingKey linking mechanism in \code{loon}. Points with the same
+#' @param linkingKey Linking mechanism in \code{loon}. Points with the same
 #'   linkingKey value are linked together. Defaults to NULL, in which case the
 #'   linkingKey values come from \code{id.var} values
 #' @param linkingGroup linking mechanism in \code{loon}. Displays with the same
 #'   linkingGroup are linked together. Defaults to NULL, in which case the
 #'   linkingGroup is "Micromaps"
-#' @param sync Can be either 'pull' or 'push', determines whehter the initial
+#' @param sync Can be either 'pull' or 'push', determines whether the initial
 #'   synchronization should adapt to the linked states of other linked plots ('pull)
 #'   or whether it should overwrite the states of the other linked plot with its
 #'   own linked states ('push)
-#' @param ... Other optional named arguments to modify plot states of scatterplots
+#' @param ... Other optional named arguments to modify states of scatterplots
 #'
 #' @export
 #'
@@ -69,8 +68,10 @@
 #'                   variables = list(id.var = 'ST_NAME',
 #'                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
 #'                                    var2 = list(name = 'ed', xlab = 'Percent')),
-#'                   spacing = 'max',
-#'                   linkingGroup = 'micromaps', sync = 'push')
+#'                   spacing = 'max', sync = 'push',
+#'                   glyph = 'square',
+#'                   itemLabel = as.character(USstates@data$ST_NAME),
+#'                   showItemLabels = T)
 #'
 #' }
 #'
@@ -192,33 +193,37 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
   # Additional arguments
   more_states <- list(...)
 
-  if (any(identical(names(more_states), ''))) {
-    stop('... must be named arguments')
-  }
+  if (length(more_states) > 0) {
 
-  more_states_len <- vapply(more_states, function(x) length(x), FUN.VALUE = numeric(1))
-
-  if (any(more_states_len != 1 & more_states_len != n)) {
-
-    paste(names(more_states)[(more_states_len != 1 & more_states_len != n)], collapse = ', ') %>%
-      stop(paste0(., ' must be of length 1 or ', n))
-
-  }
-
-  state_orig_names <- names(more_states)
-
-  for (k in 1:length(more_states)) {
-
-    state_nm <- names(more_states)[k]
-
-    if (state_nm %in% names(spdf@data)) {
-      state_nm <- paste0(state_nm, 'MM')
-      names(more_states)[k] <- state_nm
+    if (any(identical(names(more_states), ''))) {
+      stop('... must be named arguments')
     }
 
-    spdf@data[[state_nm]] <- more_states[[k]]
+    more_states_len <- vapply(more_states, function(x) length(x), FUN.VALUE = numeric(1))
 
+    if (any(more_states_len != 1 & more_states_len != n)) {
+
+      paste(names(more_states)[(more_states_len != 1 & more_states_len != n)], collapse = ', ') %>%
+        stop(paste0(., ' must be of length 1 or ', n))
+
+    }
+
+    state_orig_names <- names(more_states)
+
+    for (k in 1:length(more_states)) {
+
+      state_nm <- names(more_states)[k]
+
+      if (state_nm %in% names(spdf@data)) {
+        state_nm <- paste0(state_nm, 'MM')
+        names(more_states)[k] <- state_nm
+      }
+
+      spdf@data[[state_nm]] <- more_states[[k]]
+
+    }
   }
+
 
 
   # Set up loon
@@ -256,17 +261,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     data[[i]]$colors <- color[1:nrow(data[[i]])]
 
-    states_i <- data[[i]][, names(more_states)] %>% as.list()
 
-    states_i <- lapply(states_i, function(x) {
-      if (length(unique(x)) == 1) {
-        x[1]
-      } else {
-        x
-      }
-    })
-
-    names(states_i) <- state_orig_names
 
 
     # Scatterplot(s)
@@ -289,8 +284,6 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                                        linkingGroup = linkingGroup,
                                        sync = sync)
 
-
-      do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
 
       if (spacing == 'max') {
 
@@ -343,7 +336,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                          linkingGroup = linkingGroup,
                          sync = sync)
 
-    do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
+
 
     if (spacing == 'max') {
       l_configure(p_label[i],
@@ -357,6 +350,29 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
     l_configure(p_label[i], panX = 0, zoomX = 1, deltaX = 6,
                 xlabel = '', ylabel = '')
 
+
+    # Apply other named arguments to scatterplots
+    if (length(more_states) > 0) {
+
+      states_i <- data[[i]][, names(more_states), drop = FALSE] %>% as.list()
+
+      states_i <- lapply(states_i, function(x) {
+        if (length(unique(x)) == 1) {
+          x[1]
+        } else {
+          x
+        }
+      })
+
+      names(states_i) <- state_orig_names
+
+      for (jj in 1:length(scatterplot_vars)) {
+        do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
+      }
+
+      do.call('l_configure', c(p_label[i], states_i))
+
+    }
 
 
     # Truncate label text if they are too long
@@ -567,7 +583,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
   mmInspector <- function(w) {
 
     tt_inspector <- tktoplevel()
-    tktitle(tt_inspector) <- 'Micromaps Custom Inspector'
+    tktitle(tt_inspector) <- 'Micromaps Inspector'
 
 
     overall <- tkframe(tt_inspector)
@@ -816,9 +832,6 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
       } else {
         n_groups_new <- as.numeric(tclvalue(n_groups_i))
       }
-
-      print(n_groups_new)
-      print(grouping_new)
 
 
       size_new <- as.numeric(tclvalue(currSize))

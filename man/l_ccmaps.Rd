@@ -11,58 +11,67 @@ l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, spdf, respvar,
   title = "CCmaps")
 }
 \arguments{
-\item{tt}{Tk top level window, used for the inspector to use the same window.
-Defaults to a new window}
+\item{tt}{Tk top level window. Defaults to a new window}
 
-\item{cc_inspector}{Whether to draw the custom inspector for micromaps, which
+\item{cc_inspector}{Whether to draw the custom inspector for CCmaps, which
 allows for variable selection, variable label update, font size adjustment
-and whether to optimize R^2. Defaults to TRUE}
+and option to optimize \eqn{R^2}. Defaults to TRUE}
 
-\item{spdf}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
-including values for variables used for determining map coloring and panel positioning}
+\item{spdf}{\code{SpatialPolygonsDataFrame} object to hold polygon coordinates
+and attributes. It should contain all variables used in analysis}
 
-\item{respvar}{character name of the response value variable}
+\item{respvar}{Name of the response value variable}
 
 \item{respvar.lab}{Label for response value variable for slider. Defaults to NULL,
-in which case respvar name is used}
+in which case \code{respvar} is used}
 
-\item{cond1var}{character name of the first conditioning variable (controls
+\item{cond1var}{Name of the first conditioning variable (controls
 panel assignment in the vertical direction)}
 
-\item{cond2var}{character name of the second conditioning variable (controls
+\item{cond2var}{Name of the second conditioning variable (controls
 panel assignment in the horizontal direction)}
 
-\item{respbreaks}{determines how the response data is divided into three groups.
-Can either be the integer 3 or a numeric vector of four break points.
-Defaults to 3, in which case the response values are divided into tertiles}
+\item{respbreaks}{Determines how the response data is divided into three groups
+for coloring scheme. It can either be the integer 3 or a numeric vector of
+four break points. Defaults to 3, in which case the response values are divided
+into tertiles}
 
-\item{size}{Font size for R^2 values on maps. Defaults to size 10}
+\item{size}{Font size for \eqn{R^2} values on the map. Defaults to size 10}
 
-\item{optimize}{logical value indicating whether panel assignment should be optimized
-for \eqn{R^2}. Defaults to FALSE, in which case the conditioning data is
-divided into tertiles}
+\item{seg1col}{Color of first interval of points by \code{respvar} value.
+Defaults to 'blue'}
 
-\item{otry}{integer (greater than 0) indicating number of values to try
+\item{seg2col}{Color of second interval of points by \code{respvar} value.
+Defaults to 'darkgrey'}
+
+\item{seg3col}{Color of third interval of points by \code{respvar} value.
+Defaults to 'red'}
+
+\item{optimize}{Logical value indicating whether panel assignment should be
+optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE,
+in which case the conditioning data is divided into tertiles}
+
+\item{otry}{Integer (greater than 0) indicating number of values to try
 for optimization (see above). Required if \code{optimize = TRUE}.
 Defaults to 10. A higher \code{otry} value leads to more precise estimates
 at the cost of longer computation time}
 
-\item{title}{character string of the title of the map. Appears in the title bar
-of the plot window. Defaults to "CCmaps"}
+\item{title}{Title of the map. Appears in the title bar of the toplevel window.
+Defaults to "CCmaps"}
 
 \item{cond1.lab}{Label for first conditional variable for slider. Defaults to NULL,
-in which case cond1 name is used}
+in which case \code{cond1} is used}
 
 \item{cond2.lab}{Label for second conditional variable for slider. Defaults to NULL,
-in which case cond1 name is used}
+in which case \code{cond2} is used}
 }
 \description{
-2-way panel of maps for visualizing multivariate data analysis
+2-way panel of maps for visualizing multivariate data
 }
 \examples{
 \dontrun{
 
-## Example 1
+### Example 1
 ## Get data
 library(maptools)
 library(rgdal)
@@ -75,7 +84,7 @@ l_ccmaps(spdf = columbus,
          title = "Columbus Residential Burglaries and Vehicle Thefts")
 
 
-## Example 2
+### Example 2
 ## Get data
 library(maptools)
 library(rgdal)

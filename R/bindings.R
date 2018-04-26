@@ -54,7 +54,6 @@ bind_zoompandelta <- function(direction = c('x', 'y', 'xy'), ...) {
 }
 
 
-
 # Disable zooming, panning and delta in the x and/or y direction for a list of widgets
 disable_zoompandelta <- function(direction = c('x', 'y', 'xy'), ...) {
 
@@ -95,8 +94,8 @@ disable_zoompandelta <- function(direction = c('x', 'y', 'xy'), ...) {
 }
 
 
-
 # Bind scatterplot point 'selected' state to polygon map layer
+# (assumes the map is plotted as a single layer, l_layer(..., asSingleLayer = T))
 bind_scat2map_sel <- function(s, m, mapping, plotorder_exp, ids) {
 
   l_bind_state(s, 'selected', function() updateMap_sp_sel())
@@ -119,7 +118,6 @@ bind_scat2map_sel <- function(s, m, mapping, plotorder_exp, ids) {
 }
 
 
-
 # Bind scatterplot point 'color' state to polygon map layer
 bind_scat2map_col <- function(s, m, plotorder_exp, ids) {
 
@@ -139,7 +137,7 @@ bind_scat2map_col <- function(s, m, plotorder_exp, ids) {
 }
 
 
-# Bind polygon layer selection to scatterplot points
+# Bind polygon selection from a map layer to scatterplot points
 # Selection on maps is done using left mouse click
 bind_map2scat <- function(s, m, m_base, mapping) {
 
@@ -166,9 +164,8 @@ bind_map2scat <- function(s, m, m_base, mapping) {
 }
 
 
-
-# Bind multiple polygon layer selections to scatterplot points
-# Addition to selection on maps is done using the Shift + left mouse click
+# Bind multiple polygon selections from a map layer to scatterplot points
+# Multiple selection is done using the Shift + left mouse click
 bind_map2scat_add <- function(s, m, m_base, mapping) {
 
   l_bind_item(m_base, paste0(m), '<Shift-ButtonPress-1>', function() updatePlot_sp_add())
@@ -190,5 +187,4 @@ bind_map2scat_add <- function(s, m, m_base, mapping) {
   }
 
 }
-
 

@@ -3,8 +3,8 @@
 
 .onLoad <- function(libname, pkgname) {
 
-  ## Modified MinMaxSlider
   # Note that one \ is escaped with \\
+
   # Definition of modified MinMaxSlider (2 handles)
   .Tcl(
     '

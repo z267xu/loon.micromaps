@@ -23,7 +23,7 @@ mm <- l_micromaps(spdf = USstates,
 
 
 # Draw CCmaps -----
-cc <- l_ccmaps(spdf = usadata,
+cc <- l_ccmaps(spdf = USstates,
                respvar = 'lung_bronch_death', respvar.lab = 'Lung & Bronchus Cancer Death Rate',
                cond1var = 'pm25', cond1var.lab = 'Fine Particulate Matter Level',
                cond2var = 'income', cond2var.lab = 'Income per Capita',

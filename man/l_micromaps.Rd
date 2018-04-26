@@ -2,7 +2,7 @@
 % Please edit documentation in R/l_micromaps.R
 \name{l_micromaps}
 \alias{l_micromaps}
-\title{Micromaps in loon}
+\title{Linked micromaps in loon}
 \usage{
 l_micromaps(top = tktoplevel(), mm_inspector = TRUE, spdf,
   grouping = NULL, n_groups = NULL, map.label = "Map",
@@ -12,52 +12,52 @@ l_micromaps(top = tktoplevel(), mm_inspector = TRUE, spdf,
   "push"), ...)
 }
 \arguments{
-\item{top}{Tk top level window, used for the inspector to use the same window.
-Defaults to a new window}
+\item{top}{Tk top level window. Defaults to a new window}
 
 \item{mm_inspector}{Whether to draw custom inspector for micromaps, which
-allows for variable selection, variable label update, fontsize adjustment,
-and grouping of regions. Defaults to TRUE}
+allows for variable selection, variable label update, font size adjustment,
+and setting grouping of points. Defaults to TRUE}
 
-\item{spdf}{SpatialPolygonsDataFrame to hold polygon coordinates and attributes,
-including statistics used for comparing between regions}
+\item{spdf}{\code{SpatialPolygonsDataFrame} object to hold polygon coordinates
+and attributes. It should contain statistics used for comparing between regions}
 
-\item{grouping}{An optional character vector specifying how many points per
-row (top to bottom row)}
+\item{grouping}{An optional character vector specifying how many points to
+have per row (from top to bottom of display)}
 
-\item{n_groups}{An optional number specifying how many rows to have.
-If both \code{gropuing} and \code{n_groups} are provided, \code{grouping}
+\item{n_groups}{An optional integer specifying how many rows to have.
+If both \code{grouping} and \code{n_groups} are provided, \code{grouping}
 is applied}
 
 \item{map.label}{Label for maps (rightmost) panel}
 
 \item{lab.label}{Label for labels (leftmost) panel}
 
-\item{title}{Title for the micromap. Appears on the bar of the toplevel window}
+\item{title}{Title for micromap. Appears in the title bar of the toplevel window}
 
-\item{variables}{Variables containing statistics to compare. List form, with
-one element per variable. Variables required: \code{grouping.var}. Optional
-variables: \code{id.var} and other variables to plot.
-The \code{grouping.var} is used to decide the ordering of variables on the map.
-All variables, with the exception of \code{id.var}, should be a list with
-\code{name}, and optional \code{xlab} and \code{label} arguments. For example,
-for a variable named 'ed' used for grouping, this could be
+\item{variables}{List specifying variables to plot. Variable required: \code{id.var}
+and \code{grouping.var}. Optional variables: more variables to plot.
+\code{id.var} specifies the names of points. The \code{grouping.var} is
+used to decide the ordering of points on the map. All variables,
+with the exception of \code{id.var}, should be a list with \code{name},
+and optional \code{xlab} and optional \code{label} arguments.
+For example, for a variable named 'ed' used for grouping, the \code{variables}
+argument would look like:
 \code{variables = list(grouping.var = list(name = "ed", xlab = "Percent", label = "\% with University Education"))}}
 
-\item{num_optvars}{Number of slots to leave for optional variables in
-\code{mm_inspector}. Defaults to NULL, in which case it is determined
-based on how many variables are provided in \code{variable}}
+\item{num_optvars}{Number of possible optional variables for \code{mm_inspector}.
+Defaults to NULL, in which case it is determined based on how many variables are
+provided to \code{variables}}
 
 \item{spacing}{Spacing scheme for points - either 'equal' or 'max'. 'equal'
 spaces points out equally, while 'max' ensures same amount of spacing between
-points as the row with the maximum number of rows}
+points as the row with the largest number of points}
 
-\item{color}{Color scheme. Defaults to NULL, in which case the colors are
-automatically generated using \code{loon::loon_palette}}
+\item{color}{Color scheme. Defaults to NULL, in which case colors are
+generated using \code{loon::loon_palette}}
 
 \item{size}{Size of glyphs for scatterplots and label panel. Defaults to 6}
 
-\item{linkingKey}{linking mechanism in \code{loon}. Points with the same
+\item{linkingKey}{Linking mechanism in \code{loon}. Points with the same
 linkingKey value are linked together. Defaults to NULL, in which case the
 linkingKey values come from \code{id.var} values}
 
@@ -65,16 +65,15 @@ linkingKey values come from \code{id.var} values}
 linkingGroup are linked together. Defaults to NULL, in which case the
 linkingGroup is "Micromaps"}
 
-\item{sync}{Can be either 'pull' or 'push', determines whehter the initial
+\item{sync}{Can be either 'pull' or 'push', determines whether the initial
 synchronization should adapt to the linked states of other linked plots ('pull)
 or whether it should overwrite the states of the other linked plot with its
 own linked states ('push)}
 
-\item{...}{Other optional named arguments to modify plot states of scatterplots}
+\item{...}{Other optional named arguments to modify states of scatterplots}
 }
 \description{
-Sets up multiple panels for comparing different statistics
-  across geographical regions for visualizing multivariate data analysis
+Compares different statistics across geographical regions
 }
 \examples{
 \dontrun{
@@ -91,8 +90,10 @@ mm <- l_micromaps(spdf = USstates,
                   variables = list(id.var = 'ST_NAME',
                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
                                    var2 = list(name = 'ed', xlab = 'Percent')),
-                  spacing = 'max',
-                  linkingGroup = 'micromaps', sync = 'push')
+                  spacing = 'max', sync = 'push',
+                  glyph = 'square',
+                  itemLabel = as.character(USstates@data$ST_NAME),
+                  showItemLabels = T)
 
 }
 
