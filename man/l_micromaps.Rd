@@ -65,9 +65,9 @@ linkingGroup are linked together. Defaults to NULL, in which case the
 linkingGroup is "Micromaps"}
 
 \item{sync}{Can be either 'pull' or 'push', determines whether the initial
-synchronization should adapt to the linked states of other linked plots ('pull)
+synchronization should adapt to the linked states of other linked plots ("pull")
 or whether it should overwrite the states of the other linked plot with its
-own linked states ('push)}
+own linked states ("push")}
 
 \item{...}{Other optional named arguments to modify states of scatterplots}
 }

@@ -42,15 +42,15 @@
 #'   linkingGroup are linked together. Defaults to NULL, in which case the
 #'   linkingGroup is "Micromaps"
 #' @param sync Can be either 'pull' or 'push', determines whether the initial
-#'   synchronization should adapt to the linked states of other linked plots ('pull)
+#'   synchronization should adapt to the linked states of other linked plots ("pull")
 #'   or whether it should overwrite the states of the other linked plot with its
-#'   own linked states ('push)
+#'   own linked states ("push")
 #' @param ... Other optional named arguments to modify states of scatterplots
 #'
 #' @export
 #'
 #' @importFrom magrittr %>%
-#' @importFrom dplyr arrange_ select_ mutate
+#' @importFrom dplyr arrange_ arrange select_ mutate
 #' @importFrom purrr walk
 #'
 #' @examples
@@ -263,7 +263,22 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
     data[[i]]$colors <- color[1:nrow(data[[i]])]
 
 
+    # Apply other named arguments to scatterplots
+    if (length(more_states) > 0) {
 
+      states_i <- data[[i]][, names(more_states), drop = FALSE] %>% as.list()
+
+      states_i <- lapply(states_i, function(x) {
+        if (length(unique(x)) == 1) {
+          x[1]
+        } else {
+          x
+        }
+      })
+
+      names(states_i) <- state_orig_names
+
+    }
 
     # Scatterplot(s)
     for (jj in 1:length(scatterplot_vars)) {
@@ -276,6 +291,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
         y_pr <- seq(grouping[i], 1)
       }
 
+
       p_scatterplot[[jj]][i] <- l_plot(parent = top,
                                        x = data[[i]][[var]],
                                        y = y_pr,
@@ -284,6 +300,9 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                                        linkingKey = data[[i]][['linkingKey']],
                                        linkingGroup = linkingGroup,
                                        sync = sync)
+
+
+      if (length(more_states) > 0)  do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
 
 
       if (spacing == 'max') {
@@ -338,6 +357,8 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                          sync = sync)
 
 
+    if (length(more_states) > 0) do.call('l_configure', c(p_label[i], states_i))
+
 
     if (spacing == 'max') {
       l_configure(p_label[i],
@@ -352,34 +373,14 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                 xlabel = '', ylabel = '')
 
 
-    # Apply other named arguments to scatterplots
-    if (length(more_states) > 0) {
 
-      states_i <- data[[i]][, names(more_states), drop = FALSE] %>% as.list()
-
-      states_i <- lapply(states_i, function(x) {
-        if (length(unique(x)) == 1) {
-          x[1]
-        } else {
-          x
-        }
-      })
-
-      names(states_i) <- state_orig_names
-
-      for (jj in 1:length(scatterplot_vars)) {
-        do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
-      }
-
-      do.call('l_configure', c(p_label[i], states_i))
-
-    }
 
 
     # Truncate label text if they are too long
     trunc_labels <- vapply(as.character(data[[i]]$NAME),
                            function(x) ifelse(nchar(x) > 25, paste0(substr(x, 1, 25), '...'), x),
                            FUN.VALUE = character(1), USE.NAMES = F)
+
 
     p_label_text[i] <- l_layer_texts(p_label[i],
                                      x = rep(2, nrow(data[[i]])),
@@ -388,6 +389,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                                      anchor = 'w',
                                      size = size,
                                      col = 'black')
+
 
 
     mapping_scatterplot2map[[i]] <- lapply(data[[i]]$NAME, function(x) which(attr(p_map[[i]], 'NAME') == x))

@@ -25,14 +25,14 @@
     set n_pix_per_res 1
     set n_pix_per_res2 0.5
 
-    set b_w 20
-    set b_e 20
-    set b_s 20
-    set b_n 20
+    set b_w 35
+    set b_e 35
+    set b_s 35
+    set b_n 35
     set slider_peak 5
     set slider_width 12
     set slider_width2 6
-    set pad_text 2
+    set pad_text 3
 
     next $Path
 

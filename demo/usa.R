@@ -17,6 +17,7 @@ mm <- l_micromaps(lab.label = 'States',
                                    grouping.var = list(name = 'lung_bronch_death'),
                                    var2 = list(name = 'pm25', label = 'Fine Particulate Matter Level'),
                                    var3 = list(name = 'income', label = 'Income per Capita')),
+                  n_groups = 8,
                   linkingGroup = 'States', sync = 'push',
                   spacing = 'equal',
                   showItemLabels = TRUE, itemLabel = as.character(USstates@data$ST_NAME))

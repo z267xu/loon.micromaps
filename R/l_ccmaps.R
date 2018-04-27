@@ -535,12 +535,12 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   tkgrid(tt$env$resetbutton, row = 4, column = 0)
 
 
-  tkgrid.columnconfigure(tt, 3, weight = 4, minsize = 25)
-  tkgrid.rowconfigure(tt, 0, weight = 3, minsize = 25)
-  tkgrid.rowconfigure(tt, 4, weight = 3, minsize = 25)
+  tkgrid.columnconfigure(tt, 3, weight = 10, minsize = 50)
+  tkgrid.rowconfigure(tt, 0, weight = 4, minsize = 50)
+  tkgrid.rowconfigure(tt, 4, weight = 4, minsize = 50)
 
-  for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight = 2, minsize = 60) }
-  for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight = 2, minsize = 60) }
+  for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight = 5) }
+  for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight = 5) }
 
 
   # Inspector -----

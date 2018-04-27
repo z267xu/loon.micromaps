@@ -13,8 +13,18 @@ cd@data$ind <- 1:nrow(cd@data)
 
 
 # Subset to Southern Ontario census divisions -----
+southon_cds <- c("Stormont", "Dundas and Glengarry", "Prescott and Russell", "Ottawa",
+                 "Leeds and Grenville", "Lanark", "Frontenac", "Lennox and Addington",
+                 "Hastings", "Prince Edward", "Northumberland", "Peterborough", "Kawartha Lakes",
+                 "Durham", "York", "Toronto", "Peel", "Dufferin", "Wellington",
+                 "Halton", "Hamilton", "Niagara", "Haldimand-Norfolk", "Brant",
+                 "Waterloo", "Perth", "Oxford", "Elgin", "Chatham-Kent", "Essex",
+                 "Lambton", "Middlesex", "Huron", "Bruce", "Grey", "Simcoe", "Muskoka",
+                 "Haliburton", "Renfrew", "Nipissing", "Parry Sound")
+
+
 southon_ids <- cd@data %>%
-  filter(PRNAME == 'Ontario', CDTYPE != 'DIS', CDNAME != 'Greater Sudbury / Grand Sudbury') %>%
+  filter(CDNAME %in% southon_cds & PRNAME == 'Ontario') %>%
   select(ind) %>%
   unlist() %>%
   as.character() %>% as.numeric()
@@ -37,13 +47,14 @@ mm <- l_micromaps(lab.label = 'Census Divisions',
                                                        label = '% Immigrant Population'),
                                    var2 = list(name = 'pop_density', xlab = 'Per KM^2')),
                   spacing = 'equal', n_groups = 5,
-                  glyph = 'square', linkingGroup = 'Southern_ON', sync = 'push')
+                  linkingGroup = 'Southern_ON', sync = 'push',
+                  showItemLabels = TRUE, itemLabel = cd_southon@data$CDNAME)
 
 
 # Draw CCmaps -----
 cc <- l_ccmaps(spdf = cd_southon,
                respvar = 'pct_immigrants', respvar.lab = '% Immigrant Population',
-               cond1var = 'employ_rate_25_54', cond1var.lab = 'Employment Rate, Age 25-54',
+               cond1var = 'bachelor_above', cond1var.lab = '% with Bachelor Education',
                cond2var = 'pop_density', cond2var.lab = 'Population Density',
                seg1col = 'yellow', seg3col = 'orange')
 
