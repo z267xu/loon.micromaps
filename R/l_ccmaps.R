@@ -41,7 +41,7 @@
 #'   Defaults to 10. A higher \code{otry} value leads to more precise estimates
 #'   at the cost of longer computation time
 #'
-#' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select
+#' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select transmute mutate_all
 #' @importFrom magrittr %>%
 #'
 #' @export
@@ -385,8 +385,13 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   # R2 -----
   # Model values and R^2 label
   r2 <- r2_calc(df$resp[!duplicated(df$id)], df$group[!duplicated(df$id)])
-  tt$env$r2label <- tcl('label', l_subwin(tt,'r2label'), text = paste0("R^2: ", round(r2, 2)),
-                        font = tkfont.create(size = size))
+
+  if ('r2label' %in% names(tt$env)) {
+    tcl(tt$env$r2label, 'configure', text = paste0("R^2: ", round(r2, 2)))
+  } else {
+    tt$env$r2label <- tcl('label', l_subwin(tt,'r2label'), text = paste0("R^2: ", round(r2, 2)),
+                          font = tkfont.create(size = size))
+  }
 
   model_values <- attr(r2, 'model_values')
 
@@ -461,9 +466,9 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
     cond1cuts <- attr(spdf@data$cond1_cat, 'cuts')
     cond2cuts <- attr(spdf@data$cond2_cat, 'cuts')
 
-    tcl(tt$env$scaletop, 'configure', min = respcuts[1], max = respcuts[2])
-    tcl(tt$env$scaleright, 'configure', min = cond1cuts[1], max = cond1cuts[2])
-    tcl(tt$env$scalebottom, 'configure', min = cond2cuts[1], max = cond2cuts[2])
+    tcl(tt$env$scaletop, 'configure', min = pretty_scale(respcuts[1]), max = pretty_scale(respcuts[2]))
+    tcl(tt$env$scaleright, 'configure', min = pretty_scale(cond1cuts[1]), max = pretty_scale(cond1cuts[2]))
+    tcl(tt$env$scalebottom, 'configure', min = pretty_scale(cond2cuts[1]), max = pretty_scale(cond2cuts[2]))
 
 
     orig_df <- data_wcol(resp = resp, resp_cat = spdf@data$resp_cat,
@@ -477,36 +482,48 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
   # Sliders and labels -----
   # Creates sliders and slider labels
-  tt$env$labelscaletop <- tcl('label', l_subwin(tt,'scalelabel_top'),
-                              text = ifelse(is.null(respvar.lab), respvar, respvar.lab))
 
-  tt$env$scaletop <- tcl('::minmax_scale2', l_subwin(tt, 'scaletop'),
-                         from = min(resp), to = max(resp),
-                         min = attr(spdf@data$resp_cat, 'cuts')[1],
-                         max = attr(spdf@data$resp_cat, 'cuts')[2],
-                         resolution = 0.1, orient = 'horizontal',
+  if ('labelscaletop' %in% names(tt$env)) {
+
+    tcl(tt$env$labelscaletop, 'configure', text = ifelse(is.null(respvar.lab), respvar, respvar.lab))
+    tcl(tt$env$labelscaleright, 'configure', text = ifelse(is.null(cond1var.lab), cond1var, cond1var.lab))
+    tcl(tt$env$labelscalebottom, 'configure', text = ifelse(is.null(cond2var.lab), cond2var, cond2var.lab))
+
+  } else {
+
+    tt$env$labelscaletop <- tcl('label', l_subwin(tt,'scalelabel_top'),
+                                text = ifelse(is.null(respvar.lab), respvar, respvar.lab))
+
+    tt$env$labelscaleright <- tcl('label', l_subwin(tt,'scalelabel_right'),
+                                  text = ifelse(is.null(cond1var.lab), cond1var, cond1var.lab))
+
+    tt$env$labelscalebottom <- tcl('label', l_subwin(tt,'scalelabel_bottom'),
+                                   text = ifelse(is.null(cond2var.lab), cond2var, cond2var.lab))
+
+  }
+
+
+  tt$env$scaletop <- tcl('::minmax_scale2_h', l_subwin(tt, 'scaletop'),
+                         from = pretty_scale(min(resp)),
+                         to = pretty_scale(max(resp)),
+                         min = pretty_scale(attr(spdf@data$resp_cat, 'cuts')[1]),
+                         max = pretty_scale(attr(spdf@data$resp_cat, 'cuts')[2]),
+                         resolution = 0.1,
                          seg1col = seg1col, seg2col = seg2col, seg3col = seg3col)
 
+  tt$env$scaleright <- tcl('::minmax_scale2_v', l_subwin(tt, 'scaleright'),
+                           from = pretty_scale(min(cond1)),
+                           to = pretty_scale(max(cond1)),
+                           min = pretty_scale(attr(spdf@data$cond1_cat, 'cuts')[1]),
+                           max = pretty_scale(attr(spdf@data$cond1_cat, 'cuts')[2]),
+                           resolution = 0.1)
 
-
-  tt$env$labelscaleright <- tcl('label', l_subwin(tt,'scalelabel_right'),
-                                text = ifelse(is.null(cond1var.lab), cond1var, cond1var.lab))
-
-  tt$env$scaleright <- tcl('::minmax_scale2', l_subwin(tt, 'scaleright'),
-                           from = min(cond1), to = max(cond1),
-                           min = attr(spdf@data$cond1_cat, 'cuts')[1],
-                           max = attr(spdf@data$cond1_cat, 'cuts')[2],
-                           resolution = 0.1, orient="vertical")
-
-
-  tt$env$labelscalebottom <- tcl('label', l_subwin(tt,'scalelabel_bottom'),
-                                 text = ifelse(is.null(cond2var.lab), cond2var, cond2var.lab))
-
-  tt$env$scalebottom <- tcl('::minmax_scale2', l_subwin(tt, 'scalebottom'),
-                            from = min(cond2), to = max(cond2),
-                            min = attr(spdf@data$cond2_cat, 'cuts')[1],
-                            max = attr(spdf@data$cond2_cat, 'cuts')[2],
-                            resolution = 0.1, orient = "horizontal")
+  tt$env$scalebottom <- tcl('::minmax_scale2_h', l_subwin(tt, 'scalebottom'),
+                            from = pretty_scale(min(cond2)),
+                            to = pretty_scale(max(cond2)),
+                            min = pretty_scale(attr(spdf@data$cond2_cat, 'cuts')[1]),
+                            max = pretty_scale(attr(spdf@data$cond2_cat, 'cuts')[2]),
+                            resolution = 0.1)
 
   tcl(tt$env$scaletop, 'configure', command = function(...) updateGraph())
   tcl(tt$env$scalebottom, 'configure', command = function(...) updateGraph())
@@ -535,9 +552,9 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   tkgrid(tt$env$resetbutton, row = 4, column = 0)
 
 
-  tkgrid.columnconfigure(tt, 3, weight = 10, minsize = 50)
-  tkgrid.rowconfigure(tt, 0, weight = 4, minsize = 50)
-  tkgrid.rowconfigure(tt, 4, weight = 4, minsize = 50)
+  tkgrid.columnconfigure(tt, 3, weight = 0, minsize = 50)
+  tkgrid.rowconfigure(tt, 0, weight = 0, minsize = 50)
+  tkgrid.rowconfigure(tt, 4, weight = 0, minsize = 50)
 
   for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight = 5) }
   for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight = 5) }
@@ -698,7 +715,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       if (identical(tclvalue(respvar.lab_i), '')) {
         respvar.lab_new <- NULL
       } else {
-        respvar.lab_new <- respvar.lab
+        respvar.lab_new <- tclvalue(respvar.lab_i)
       }
 
 
@@ -936,8 +953,6 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
 
 # Round values to 1 decimal place and pervent scientific notation
 pretty_scale <- function(val) {
-  round(val, 1) %>%
-    format(scientific = F) %>%
-    as.numeric()
+  round(val, 1)
 }
 
