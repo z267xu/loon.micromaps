@@ -183,6 +183,10 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
     stop('seg3col must be of type character')
   }
 
+  if (any(c('cornsilk', 'CORNSILK', '#fff8dc', '#FFF8DC', '#FFFFF8F8DCDC', '#fffff8f8dcdc') %in% c(seg1col, seg2col, seg3col))) {
+    stop('seg1col, seg2col and seg3col cannot be cornsilk, which is reserved for l_ccmaps')
+  }
+
 
   if (!is.logical(optimize) | length(optimize) > 1) {
     stop("optimize must be TRUE or FALSE only")

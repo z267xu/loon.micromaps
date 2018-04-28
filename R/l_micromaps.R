@@ -109,6 +109,10 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
   }
 
 
+  if (any(c('cornsilk', 'CORNSILK', '#fff8dc', '#FFF8DC', '#FFFFF8F8DCDC', '#fffff8f8dcdc') %in% color)) {
+    stop('color cannot be cornsilk, which is reserved for l_micromaps')
+  }
+
 
   if (!is.list(variables)) stop('variables should be specified as a nested list.')
 
@@ -122,6 +126,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
   if (!('grouping.var' %in% names(variables))) {
     stop('Must specify the grouping.var in variables as list(grouping.var = list(name = ...))')
   }
+
 
   # Assign grouping and other variables (including type checks)
   vars <- Map(function(x, y) {
