@@ -560,8 +560,8 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   tkgrid.rowconfigure(tt, 0, weight = 0, minsize = 50)
   tkgrid.rowconfigure(tt, 4, weight = 0, minsize = 50)
 
-  for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight = 5) }
-  for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight = 5) }
+  for (i in 1:3) { tkgrid.rowconfigure(tt, i, weight = 1) }
+  for (j in 0:2) { tkgrid.columnconfigure(tt, j, weight = 1) }
 
 
   # Inspector -----
@@ -839,17 +839,16 @@ r2_calc <- function(x, group) {
 
   overall_mean <- mean(x)
 
-  df <- data.frame(act_value = x, group = group) %>%
-    group_by(group) %>%
-    mutate(fitted_value = mean(act_value)) %>%
-    ungroup()
+  fitted_df <- aggregate(x, by = list(group), mean)
+  colnames(fitted_df) <- c("group", "fitted_value")
 
+  act_df <- data.frame(act_value = x, group = group)
 
-  r2 <- df %>%
-    summarise(sum((fitted_value - overall_mean)^2)/sum((act_value - overall_mean)^2)) %>%
-    as.numeric()
+  model_values <- merge(fitted_df, act_df, by = "group")
 
-  attr(r2, 'model_values') <- df %>% select(-act_value) %>% unique()
+  r2 <- sum((model_values$fitted_value - overall_mean)^2)/sum((model_values$act_value - overall_mean)^2)
+
+  attr(r2, 'model_values') <- model_values
 
   r2
 
@@ -878,7 +877,6 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
                        matrix(rep(cond2_seq, times = 2), nrow = 2, byrow = T))
 
   cond2_combn_str <- apply(cond2_combn, 2, function(x) paste0(x, collapse = ', '))
-
 
   r2_df <- expand.grid(cond1_combn_str, cond2_combn_str, stringsAsFactors = F) %>%
     rowwise() %>%
