@@ -6,8 +6,9 @@
 \usage{
 l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
   respvar, respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
-  cond2var.lab = NULL, respbreaks = 3, size = 10, seg1col = "blue",
-  seg2col = "darkgrey", seg3col = "red", optimize = FALSE, otry = 10)
+  cond2var.lab = NULL, respbreaks = 3, cond1breaks = 3, cond2breaks = 3,
+  size = 10, seg1col = "blue", seg2col = "darkgrey", seg3col = "red",
+  optimize = FALSE, otry = 10)
 }
 \arguments{
 \item{tt}{Tk top level window. Defaults to a new window}
@@ -35,8 +36,14 @@ panel assignment in the horizontal direction)}
 
 \item{respbreaks}{Determines how the response data is divided into three groups
 for coloring scheme. It can either be the integer 3 or a numeric vector of
-four break points. Defaults to 3, in which case the response values are divided
+two middle break points. Defaults to 3, in which case the response values are divided
 into tertiles}
+
+\item{cond1breaks}{Similar to \code{respbreaks}; determines how the first conditioning
+variable values are divided into three groups for panel membership}
+
+\item{cond2breaks}{Similar to \code{respbreaks}; determines how the second
+conditioning variable values are divided into three groups for panel membership}
 
 \item{size}{Font size for model value labels and\eqn{R^2}. Defaults to size 10}
 
@@ -70,7 +77,6 @@ in which case \code{cond2} is used}
 \examples{
 \dontrun{
 
-### Example 1
 ## Get data
 library(maptools)
 library(rgdal)
@@ -80,27 +86,7 @@ columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1],
 l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
          spdf = columbus,
          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
-         optimize = TRUE)
-
-
-### Example 2
-## Get data
-library(maptools)
-library(rgdal)
-nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
-
-proj4string(nc.sids) <- CRS("+proj=longlat +ellps=clrk66")
-row.names(nc.sids) <- as.character(nc.sids$FIPSNO)
-
-nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) + sqrt((nc.sids$SID74+1)/nc.sids$BIR74))
-
-nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) + sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
-
-## Plot
-l_ccmaps(title = "North Carolina SIDS Rates",
-         spdf = nc.sids,
-         respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
-         optimize = FALSE)
+         optimize = FALSE, otry = 10, cond1breaks = c(1.5, 3))
 
 }
 

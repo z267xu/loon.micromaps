@@ -24,8 +24,12 @@
 #'   in which case \code{cond2} is used
 #' @param respbreaks Determines how the response data is divided into three groups
 #'   for coloring scheme. It can either be the integer 3 or a numeric vector of
-#'   four break points. Defaults to 3, in which case the response values are divided
+#'   two middle break points. Defaults to 3, in which case the response values are divided
 #'   into tertiles
+#' @param cond1breaks Similar to \code{respbreaks}; determines how the first conditioning
+#'   variable values are divided into three groups for panel membership
+#' @param cond2breaks Similar to \code{respbreaks}; determines how the second
+#'   conditioning variable values are divided into three groups for panel membership
 #' @param size Font size for model value labels and\eqn{R^2}. Defaults to size 10
 #' @param seg1col Color of first interval of points by \code{respvar} value.
 #'   Defaults to 'blue'
@@ -49,7 +53,6 @@
 #' @examples
 #'\dontrun{
 #'
-#' ### Example 1
 #' ## Get data
 #' library(maptools)
 #' library(rgdal)
@@ -59,27 +62,7 @@
 #' l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
 #'          spdf = columbus,
 #'          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
-#'          optimize = TRUE)
-#'
-#'
-#' ### Example 2
-#' ## Get data
-#' library(maptools)
-#' library(rgdal)
-#' nc.sids <- readOGR(system.file("shapes/sids.shp", package = "maptools")[1], verbose = F)
-#'
-#' proj4string(nc.sids) <- CRS("+proj=longlat +ellps=clrk66")
-#' row.names(nc.sids) <- as.character(nc.sids$FIPSNO)
-#'
-#' nc.sids$ft.SID74 <- sqrt(1000)*(sqrt(nc.sids$SID74/nc.sids$BIR74) + sqrt((nc.sids$SID74+1)/nc.sids$BIR74))
-#'
-#' nc.sids$ft.NWBIR74 <- sqrt(1000)*(sqrt(nc.sids$NWBIR74/nc.sids$BIR74) + sqrt((nc.sids$NWBIR74+1)/nc.sids$BIR74))
-#'
-#' ## Plot
-#' l_ccmaps(title = "North Carolina SIDS Rates",
-#'          spdf = nc.sids,
-#'          respvar = "SID79", cond1var = "BIR79", cond2var = "SID74",
-#'          optimize = FALSE)
+#'          optimize = FALSE, otry = 10, cond1breaks = c(1.5, 3))
 #'
 #'}
 #'
@@ -88,7 +71,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                      respvar, respvar.lab = NULL,
                      cond1var, cond1var.lab = NULL,
                      cond2var, cond2var.lab = NULL,
-                     respbreaks = 3,
+                     respbreaks = 3, cond1breaks = 3, cond2breaks = 3,
                      # scale = c('unchanged', 'percent', 'log'),
                      size = 10, seg1col = 'blue', seg2col = 'darkgrey', seg3col = 'red',
                      optimize = FALSE, otry = 10) {
@@ -158,16 +141,21 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
     stop('Label for cond2var should be a single string or NULL')
   }
 
-  respbreaks_errmsg <- "respbreaks must be a numeric vector of four break points or the integer 3"
 
-  if (!is.numeric(respbreaks)) {
-    stop(respbreaks_errmsg)
-  }
+  for (ii in c('respbreaks', 'cond1breaks', 'cond2breaks')) {
 
-  if (length(respbreaks) == 1) {
-    if (respbreaks != 3) stop(respbreaks_errmsg)
-  } else if (length(respbreaks) != 4) {
-    stop(respbreaks_errmsg)
+    errmsg <- paste0(ii, ' must be a numeric vector of four break points or the integer 3')
+
+    if (!is.numeric(get(ii))) {
+      stop(errmsg)
+    }
+
+    if (length(get(ii)) == 1) {
+      if (get(ii) != 3) stop(errmsg)
+    } else if (length(get(ii)) != 2) {
+      stop(errmsg)
+    }
+
   }
 
 
@@ -211,6 +199,10 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   }
 
 
+  tt$env$respvar <- respvar
+  tt$env$cond1var <- cond1var
+  tt$env$cond2var <- cond2var
+
 
   # Data prep -----
   n <- 9 # 9 plots from 3x3 panel
@@ -245,6 +237,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   }
 
 
+
   # Setting up plots -----
   tktitle(tt) <- title
 
@@ -271,7 +264,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   if (identical(respbreaks, 3)) {
     respcuts <- quantile(resp, probs = c(1/3, 2/3))
   } else {
-    respcuts <- c(respbreaks[2], respbreaks[3])
+    respcuts <- respbreaks
   }
 
   # Categorical variable corresponding to the intervals in study variable
@@ -293,8 +286,17 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
   } else {
 
-    cond1cuts <- quantile(cond1, probs = c(1/3, 2/3))
-    cond2cuts <- quantile(cond2, probs = c(1/3, 2/3))
+    if (identical(cond1breaks, 3)) {
+      cond1cuts <- quantile(cond1, probs = c(1/3, 2/3))
+    } else {
+      cond1cuts <- cond1breaks
+    }
+
+    if (identical(cond2breaks, 3)) {
+      cond2cuts <- quantile(cond2, probs = c(1/3, 2/3))
+    } else {
+      cond2cuts <- cond2breaks
+    }
 
   }
 
@@ -364,9 +366,9 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
       match <- model_values[model_values$group == group[i], ]
 
-      if (nrow(match) == 1) {
+      if (nrow(match) > 0) {
 
-        fitted_r <- round(match[['fitted_value']], 2)
+        fitted_r <- round(match[['fitted_value']][1], 2)
 
         l_configure(c(tt$env$p_base[i], tt$env$plabel[i]), text = fitted_r)
 
@@ -399,7 +401,6 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
   model_values <- attr(r2, 'model_values')
 
-
   xcoord <- spdf@bbox[1,1] - 0.15
   ycoord <- spdf@bbox[2,1]
 
@@ -409,9 +410,9 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
     match <- model_values[model_values$group == group[i], ]
 
-    if (nrow(match) == 1) {
+    if (nrow(match) > 0) {
 
-      fitted_r <- round(match[['fitted_value']], 2)
+      fitted_r <- round(match[['fitted_value']][1], 2)
 
       tt$env$plabel[i] <- l_layer_text(tt$env$p_base[i], x = xcoord, y = ycoord,
                                        text = fitted_r,
@@ -699,19 +700,19 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       tcl(submit, 'configure', state = 'disabled')
       tcl('tk', 'busy', tt_inspector)
 
-      if (tclvalue(respvar_i) == respvar) {
+      if (tclvalue(respvar_i) == tt$env$respvar) {
 
-        respvar_new <- respvar
+        respvar_new <- tt$env$respvar
 
-        respbreaks_new <- c(min(resp),
-                            as.numeric(tkcget(tt$env$scaletop, "-min")),
-                            as.numeric(tkcget(tt$env$scaletop, "-max")),
-                            max(resp))
+        respbreaks_new <- c(as.numeric(tkcget(tt$env$scaletop, "-min")),
+                            as.numeric(tkcget(tt$env$scaletop, "-max")))
 
       } else {
 
         respvar_new <- tclvalue(respvar_i)
         respbreaks_new <- 3
+
+        tt$env$respvar <- respvar_new
 
       }
 
@@ -723,7 +724,22 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       }
 
 
-      cond1var_new <- tclvalue(cond1var_i)
+      if (tclvalue(cond1var_i) == tt$env$cond1var) {
+
+        cond1var_new <- tt$env$cond1var
+
+        cond1breaks_new <- c(as.numeric(tkcget(tt$env$scaleright, '-min')),
+                             as.numeric(tkcget(tt$env$scaleright, '-max')))
+
+      } else {
+
+        cond1var_new <- tclvalue(cond1var_i)
+        cond1breaks_new <-3
+
+        tt$env$cond1var <- cond1var_new
+
+      }
+
 
       if (identical(tclvalue(cond1var.lab_i), '')) {
         cond1var.lab_new <- NULL
@@ -731,7 +747,22 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
         cond1var.lab_new <- tclvalue(cond1var.lab_i)
       }
 
-      cond2var_new <- tclvalue(cond2var_i)
+
+      if (tclvalue(cond2var_i) == tt$env$cond2var) {
+
+        cond2var_new <- tt$env$cond2var
+
+        cond2breaks_new <- c(as.numeric(tkcget(tt$env$scalebottom, '-min')),
+                             as.numeric(tkcget(tt$env$scalebottom, '-max')))
+
+      } else {
+
+        cond2var_new <- tclvalue(cond2var_i)
+        cond2breaks_new <-3
+
+        tt$env$cond2var <- cond2var_new
+
+      }
 
       if (identical(tclvalue(cond2var.lab_i), '')) {
         cond2var.lab_new <- NULL
@@ -752,6 +783,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                cond1var = cond1var_new, cond1var.lab = cond1var.lab_new,
                cond2var = cond2var_new, cond2var.lab = cond2var.lab_new,
                respbreaks = respbreaks_new,
+               cond1breaks = cond1breaks_new, cond2breaks = cond2breaks_new,
                size = size_new, seg1col = seg1col, seg2col = seg2col, seg3col = seg3col,
                optimize = optimize_new, otry = otry,
                title = title)
@@ -770,6 +802,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
 
   ret <- list(top = tt,
+              respvar = respvar, cond1var = cond1var, cond2var = cond2var,
               maps = list(base = tt$env$p_base, polygons = tt$env$p))
 
   return(invisible(ret))
@@ -842,9 +875,10 @@ r2_calc <- function(x, group) {
   fitted_df <- aggregate(x, by = list(group), mean)
   colnames(fitted_df) <- c("group", "fitted_value")
 
-  act_df <- data.frame(act_value = x, group = group)
+  act_df <- data.frame(act_value = x, group = group, stringsAsFactors = F)
 
   model_values <- merge(fitted_df, act_df, by = "group")
+  model_values$group <- as.character(model_values$group)
 
   r2 <- sum((model_values$fitted_value - overall_mean)^2)/sum((model_values$act_value - overall_mean)^2)
 
