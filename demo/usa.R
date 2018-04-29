@@ -23,10 +23,10 @@ mm <- l_micromaps(lab.label = 'States',
 
 
 # Draw CCmaps -----
-system.time({ cc <- l_ccmaps(spdf = USstates, title = 'CCmaps',
+cc <- l_ccmaps(spdf = USstates, title = 'CCmaps',
                respvar = 'lung_bronch_death', respvar.lab = 'Lung & Bronchus Cancer Death Rate',
                cond1var = 'pm25', cond1var.lab = 'Fine Particulate Matter Level',
                cond2var = 'income', cond2var.lab = 'Income per Capita',
-               optimize = T, otry = 10) })
+               optimize = T, otry = 10)
 # Takes ~10s to run. For faster results without optimizing R^2, set optimize=FALSE
 
