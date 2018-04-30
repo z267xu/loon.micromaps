@@ -715,8 +715,8 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
       varname <- setdiff(names(variables), c('id.var', 'grouping.var'))[i]
 
-      var_i[[i]] <- tclVar(ifelse(is.na(varname), 'NA', get(varname)))
-      box.var[[i]] <- ttkcombobox(opt, values = c('NA', vars),
+      var_i[[i]] <- tclVar(ifelse(is.na(varname), 'N/A', get(varname)))
+      box.var[[i]] <- ttkcombobox(opt, values = c('N/A', vars),
                                   textvariable = var_i[[i]],
                                   state = 'readonly')
 
@@ -806,6 +806,9 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     updatemm <- function() {
 
+      tcl(submit, 'configure', state = 'disabled')
+      tcl('tk', 'busy', tt_inspector)
+
 
       if (identical(tclvalue(lab.label_i), '')) {
         lab.label_new <- 'Labels'
@@ -883,6 +886,9 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                   map.label = map.label_new, lab.label = lab.label_new, title = title,
                   color = color_orig, size = size_new, spacing = spacing,
                   linkingKey = linkingKey, linkingGroup = linkingGroup, sync = sync, ...)
+
+      tcl(submit, 'configure', state = 'disabled')
+      tcl('tk', 'busy', tt_inspector)
 
 
     }
