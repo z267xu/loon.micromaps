@@ -48,13 +48,13 @@ conditioning variable values are divided into three groups for panel membership}
 \item{size}{Font size for model value labels and\eqn{R^2}. Defaults to size 10}
 
 \item{seg1col}{Color of first interval of points by \code{respvar} value.
-Defaults to 'blue'}
+Cannot be 'cornsilk'. Defaults to 'blue'}
 
 \item{seg2col}{Color of second interval of points by \code{respvar} value.
-Defaults to 'darkgrey'}
+Cannot be 'cornsilk'. Defaults to 'darkgrey'}
 
 \item{seg3col}{Color of third interval of points by \code{respvar} value.
-Defaults to 'red'}
+Cannot be 'cornsilk'. Defaults to 'red'}
 
 \item{optimize}{Logical value indicating whether panel assignment should be
 optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE,

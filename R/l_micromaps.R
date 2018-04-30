@@ -33,7 +33,8 @@
 #'   spaces points out equally, while 'max' ensures same amount of spacing between
 #'   points as the row with the largest number of points
 #' @param color Color scheme. Defaults to NULL, in which case colors are
-#'   generated using \code{loon::loon_palette}
+#'   generated using \code{loon::loon_palette}. Cannot be 'cornsilk' or 'magenta',
+#'   which are reserved colors
 #' @param size Size of glyphs for scatterplots and label panel. Defaults to 6
 #' @param linkingKey Linking mechanism in \code{loon}. Points with the same
 #'   linkingKey value are linked together. Defaults to NULL, in which case the
@@ -69,7 +70,6 @@
 #'                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
 #'                                    var2 = list(name = 'ed', xlab = 'Percent')),
 #'                   spacing = 'max', sync = 'push',
-#'                   glyph = 'square',
 #'                   itemLabel = as.character(USstates@data$ST_NAME),
 #'                   showItemLabels = T)
 #'
@@ -111,6 +111,10 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
   if (any(c('cornsilk', 'CORNSILK', '#fff8dc', '#FFF8DC', '#FFFFF8F8DCDC', '#fffff8f8dcdc') %in% color)) {
     stop('color cannot be cornsilk, which is reserved for l_micromaps')
+  }
+
+  if (any(c('magenta', 'MAGENTA', '#ff00ff', '#FF00FF', '#FFFF0000FFFF', '#ffff0000ffff') %in% color)) {
+    stop('color cannot be magenta, which is reserved for l_micromaps')
   }
 
 
@@ -210,7 +214,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     margin_states_len <- vapply(margin_states, length, FUN.VALUE = numeric(1))
 
-    if (all(!is.na(names(margin_states))) & any(margin_states_len != 4)) {
+    if (length(margin_states) > 0 & any(margin_states_len != 4)) {
 
       paste(names(margin_states_len)[margin_states_len != 4], collapse = ', ') %>%
         stop(paste0(., ' must be of length 4'))
@@ -342,7 +346,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
       if (length(more_states) > 0)  do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
 
-      if (all(!is.na(names(margin_states)))) do.call('l_configure', c(p_scatterplot[[jj]][i], margin_states))
+      if (length(margin_states) > 0) do.call('l_configure', c(p_scatterplot[[jj]][i], margin_states))
 
 
     }
@@ -395,7 +399,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     if (length(more_states) > 0) do.call('l_configure', c(p_label[i], states_i))
 
-    if (all(!is.na(names(margin_states)))) do.call('l_configure', c(p_label[i], margin_states))
+    if (length(margin_states) > 0) do.call('l_configure', c(p_label[i], margin_states))
 
 
 

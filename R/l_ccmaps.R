@@ -32,11 +32,11 @@
 #'   conditioning variable values are divided into three groups for panel membership
 #' @param size Font size for model value labels and\eqn{R^2}. Defaults to size 10
 #' @param seg1col Color of first interval of points by \code{respvar} value.
-#'   Defaults to 'blue'
+#'   Cannot be 'cornsilk'. Defaults to 'blue'
 #' @param seg2col Color of second interval of points by \code{respvar} value.
-#'   Defaults to 'darkgrey'
+#'   Cannot be 'cornsilk'. Defaults to 'darkgrey'
 #' @param seg3col Color of third interval of points by \code{respvar} value.
-#'   Defaults to 'red'
+#'   Cannot be 'cornsilk'. Defaults to 'red'
 #' @param optimize Logical value indicating whether panel assignment should be
 #'   optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE,
 #'   in which case the conditioning data is divided into tertiles

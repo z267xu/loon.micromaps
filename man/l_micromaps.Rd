@@ -52,7 +52,8 @@ spaces points out equally, while 'max' ensures same amount of spacing between
 points as the row with the largest number of points}
 
 \item{color}{Color scheme. Defaults to NULL, in which case colors are
-generated using \code{loon::loon_palette}}
+generated using \code{loon::loon_palette}. Cannot be 'cornsilk' or 'magenta',
+which are reserved colors}
 
 \item{size}{Size of glyphs for scatterplots and label panel. Defaults to 6}
 
@@ -90,7 +91,6 @@ mm <- l_micromaps(lab.label = 'States',
                                    grouping.var = list(name = 'pov', xlab = 'Percent'),
                                    var2 = list(name = 'ed', xlab = 'Percent')),
                   spacing = 'max', sync = 'push',
-                  glyph = 'square',
                   itemLabel = as.character(USstates@data$ST_NAME),
                   showItemLabels = T)
 
