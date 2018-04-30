@@ -205,7 +205,23 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
       stop('... must be named arguments')
     }
 
-    more_states_len <- vapply(more_states, function(x) length(x), FUN.VALUE = numeric(1))
+
+    margin_states <- more_states[names(more_states) %in% c('minimumMargins', 'labelMargins', 'scalesMargins')]
+
+    margin_states_len <- vapply(margin_states, length, FUN.VALUE = numeric(1))
+
+    if (all(!is.na(names(margin_states))) & any(margin_states_len != 4)) {
+
+      paste(names(margin_states_len)[margin_states_len != 4], collapse = ', ') %>%
+        stop(paste0(., ' must be of length 4'))
+
+    }
+
+
+    more_states <- more_states[!(names(more_states) %in% c('minimumMargins', 'labelMargins', 'scalesMargins'))]
+
+
+    more_states_len <- vapply(more_states, length, FUN.VALUE = numeric(1))
 
     if (any(more_states_len != 1 & more_states_len != n)) {
 
@@ -307,9 +323,6 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                                        sync = sync)
 
 
-      if (length(more_states) > 0)  do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
-
-
       if (spacing == 'max') {
 
         l_configure(p_scatterplot[[jj]][i],
@@ -326,6 +339,11 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
       l_configure(p_scatterplot[[jj]][i],
                   panX = xlims[[jj]][1], zoomX = 1, deltaX = diff(xlims[[jj]]),
                   showLabels = T, xlabel = '', ylabel = '')
+
+      if (length(more_states) > 0)  do.call('l_configure', c(p_scatterplot[[jj]][i], states_i))
+
+      if (all(!is.na(names(margin_states)))) do.call('l_configure', c(p_scatterplot[[jj]][i], margin_states))
+
 
     }
 
@@ -362,9 +380,6 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                          sync = sync)
 
 
-    if (length(more_states) > 0) do.call('l_configure', c(p_label[i], states_i))
-
-
     if (spacing == 'max') {
       l_configure(p_label[i],
                   panY = 0, zoomY = 1, deltaY = max_per_group + 1)
@@ -378,6 +393,9 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
                 xlabel = '', ylabel = '')
 
 
+    if (length(more_states) > 0) do.call('l_configure', c(p_label[i], states_i))
+
+    if (all(!is.na(names(margin_states)))) do.call('l_configure', c(p_label[i], margin_states))
 
 
 
