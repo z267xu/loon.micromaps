@@ -968,12 +968,8 @@ assign_colors <- function(var, cuts, seg1col, seg2col, seg3col) {
 }
 
 
-#' Calculates R^2 given the study variable values and the panel assignment
-#'   based on the conditioning variables
-#'
-#' @importFrom dplyr group_by mutate ungroup summarise select
-#' @importFrom magrittr %>%
-#'
+# Calculates R^2 given the study variable values and the panel assignment
+# based on the conditioning variables
 r2_calc <- function(x, group) {
 
   overall_mean <- mean(x)
@@ -1052,7 +1048,7 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
 }
 
 
-# Change scale from actual numbers to percent or log scale
+# Change from actual/raw numbers to percentile or log scale numbers
 convert_act2scale <- function(scale = c('actual', 'percent', 'log'), val, vals = NULL) {
 
   if (scale == 'actual') {
@@ -1075,6 +1071,7 @@ convert_act2scale <- function(scale = c('actual', 'percent', 'log'), val, vals =
 }
 
 
+# Change from percentile or log scale numbers to actual/raw numbers
 convert_scale2act <- function(scale = c('actual', 'percent', 'log'), val, vals = NULL) {
 
   if (scale == 'actual') {
