@@ -806,6 +806,8 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     updatemm <- function() {
 
+      # Disable any clicks until the code finishes running
+      # (since optimization takes a long time to run)
       tcl(submit, 'configure', state = 'disabled')
       tcl('tk', 'busy', tt_inspector)
 
@@ -880,16 +882,23 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
       spdf@data <- spdf@data[, !(names(spdf@data) %in% c('linkingKey', 'group', names(more_states)))]
 
 
-      l_micromaps(top = w$top, mm_inspector = FALSE,
-                  spdf = spdf, grouping = grouping_new, n_groups = n_groups_new,
-                  variables = variables, num_optvars = num_optvars,
-                  map.label = map.label_new, lab.label = lab.label_new, title = title,
-                  color = color_orig, size = size_new, spacing = spacing,
-                  linkingKey = linkingKey, linkingGroup = linkingGroup, sync = sync, ...)
+      tryCatch({
 
-      tcl(submit, 'configure', state = 'disabled')
-      tcl('tk', 'busy', tt_inspector)
+        l_micromaps(top = w$top, mm_inspector = FALSE,
+                    spdf = spdf, grouping = grouping_new, n_groups = n_groups_new,
+                    variables = variables, num_optvars = num_optvars,
+                    map.label = map.label_new, lab.label = lab.label_new, title = title,
+                    color = color_orig, size = size_new, spacing = spacing,
+                    linkingKey = linkingKey, linkingGroup = linkingGroup, sync = sync, ...)
 
+      }, error = function(err) {
+
+        print(paste0('Linked micromaps update ran into the following error: ', err))
+
+      })
+
+      tcl('tk', 'busy', 'forget', tt_inspector)
+      tcl(submit, 'configure', state = 'normal')
 
     }
 

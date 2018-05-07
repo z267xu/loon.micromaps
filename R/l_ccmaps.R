@@ -880,18 +880,26 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       size_new <- as.numeric(tclvalue(currSize))
 
 
-      l_ccmaps(tt = w, cc_inspector = FALSE,
-               spdf = spdf,
-               respvar = respvar_new, respvar.lab = respvar.lab_new,
-               cond1var = cond1var_new, cond1var.lab = cond1var.lab_new,
-               cond2var = cond2var_new, cond2var.lab = cond2var.lab_new,
-               respbreaks = respbreaks_new,
-               cond1breaks = cond1breaks_new, cond2breaks = cond2breaks_new,
-               respscale = respscale_new,
-               cond1scale = cond1scale_new, cond2scale = cond2scale_new,
-               size = size_new, seg1col = seg1col, seg2col = seg2col, seg3col = seg3col,
-               optimize = optimize_new, otry = otry,
-               title = title)
+      tryCatch({
+
+        l_ccmaps(tt = w, cc_inspector = FALSE,
+                 spdf = spdf,
+                 respvar = respvar_new, respvar.lab = respvar.lab_new,
+                 cond1var = cond1var_new, cond1var.lab = cond1var.lab_new,
+                 cond2var = cond2var_new, cond2var.lab = cond2var.lab_new,
+                 respbreaks = respbreaks_new,
+                 cond1breaks = cond1breaks_new, cond2breaks = cond2breaks_new,
+                 respscale = respscale_new,
+                 cond1scale = cond1scale_new, cond2scale = cond2scale_new,
+                 size = size_new, seg1col = seg1col, seg2col = seg2col, seg3col = seg3col,
+                 optimize = optimize_new, otry = otry,
+                 title = title)
+
+      }, error = function(err) {
+
+        print(paste0('CCmaps update ran into the following error: ', err))
+
+      })
 
 
       tcl('tk', 'busy', 'forget', tt_inspector)
