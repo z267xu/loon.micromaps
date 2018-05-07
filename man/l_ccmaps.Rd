@@ -6,8 +6,10 @@
 \usage{
 l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
   respvar, respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
-  cond2var.lab = NULL, respbreaks = 3, cond1breaks = 3, cond2breaks = 3,
-  size = 10, seg1col = "blue", seg2col = "darkgrey", seg3col = "red",
+  cond2var.lab = NULL, respbreaks = 2, cond1breaks = 2, cond2breaks = 2,
+  respscale = c("actual", "percent", "log"), cond1scale = c("actual",
+  "percent", "log"), cond2scale = c("actual", "percent", "log"), size = 10,
+  seg1col = "blue", seg2col = "darkgrey", seg3col = "red",
   optimize = FALSE, otry = 10)
 }
 \arguments{
@@ -35,8 +37,8 @@ panel assignment in the vertical direction)}
 panel assignment in the horizontal direction)}
 
 \item{respbreaks}{Determines how the response data is divided into three groups
-for coloring scheme. It can either be the integer 3 or a numeric vector of
-two middle break points. Defaults to 3, in which case the response values are divided
+for coloring scheme. It can either be the integer 2 or a numeric vector of
+two middle break points. Defaults to 2, in which case the response values are divided
 into tertiles}
 
 \item{cond1breaks}{Similar to \code{respbreaks}; determines how the first conditioning
@@ -44,6 +46,15 @@ variable values are divided into three groups for panel membership}
 
 \item{cond2breaks}{Similar to \code{respbreaks}; determines how the second
 conditioning variable values are divided into three groups for panel membership}
+
+\item{respscale}{What scale to use for drawing the response variable slider. Must be
+one of three values - actual (unchanged), percent (quantiles) and log}
+
+\item{cond1scale}{What scale to use for drawing the first conditioning variable slider.
+Must be one of three values - actual (unchanged), percent (quantiles) and log}
+
+\item{cond2scale}{What scale to use for drawing the second conditioning variable slider.
+Must be one of three values - actual (unchanged), percent (quantiles) and log}
 
 \item{size}{Font size for model value labels and\eqn{R^2}. Defaults to size 10}
 

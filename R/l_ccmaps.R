@@ -23,13 +23,19 @@
 #' @param cond2.lab Label for second conditional variable for slider. Defaults to NULL,
 #'   in which case \code{cond2} is used
 #' @param respbreaks Determines how the response data is divided into three groups
-#'   for coloring scheme. It can either be the integer 3 or a numeric vector of
-#'   two middle break points. Defaults to 3, in which case the response values are divided
+#'   for coloring scheme. It can either be the integer 2 or a numeric vector of
+#'   two middle break points. Defaults to 2, in which case the response values are divided
 #'   into tertiles
 #' @param cond1breaks Similar to \code{respbreaks}; determines how the first conditioning
 #'   variable values are divided into three groups for panel membership
 #' @param cond2breaks Similar to \code{respbreaks}; determines how the second
 #'   conditioning variable values are divided into three groups for panel membership
+#' @param respscale What scale to use for drawing the response variable slider. Must be
+#'   one of three values - actual (unchanged), percent (quantiles) and log
+#' @param cond1scale What scale to use for drawing the first conditioning variable slider.
+#'   Must be one of three values - actual (unchanged), percent (quantiles) and log
+#' @param cond2scale What scale to use for drawing the second conditioning variable slider.
+#'   Must be one of three values - actual (unchanged), percent (quantiles) and log
 #' @param size Font size for model value labels and\eqn{R^2}. Defaults to size 10
 #' @param seg1col Color of first interval of points by \code{respvar} value.
 #'   Cannot be 'cornsilk'. Defaults to 'blue'
@@ -62,6 +68,7 @@
 #' l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
 #'          spdf = columbus,
 #'          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
+#'          respscale = "actual", cond1scale = "actual", cond2scale = "actual",
 #'          optimize = FALSE)
 #'
 #'}
@@ -71,8 +78,10 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                      respvar, respvar.lab = NULL,
                      cond1var, cond1var.lab = NULL,
                      cond2var, cond2var.lab = NULL,
-                     respbreaks = 3, cond1breaks = 3, cond2breaks = 3,
-                     # scale = c('unchanged', 'percent', 'log'),
+                     respbreaks = 2, cond1breaks = 2, cond2breaks = 2,
+                     respscale = c('actual', 'percent', 'log'),
+                     cond1scale = c('actual', 'percent', 'log'),
+                     cond2scale = c('actual', 'percent', 'log'),
                      size = 10, seg1col = 'blue', seg2col = 'darkgrey', seg3col = 'red',
                      optimize = FALSE, otry = 10) {
 
@@ -151,7 +160,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
     }
 
     if (length(get(ii)) == 1) {
-      if (get(ii) != 3) stop(errmsg)
+      if (get(ii) != 2) stop(errmsg)
     } else if (length(get(ii)) != 2) {
       stop(errmsg)
     }
@@ -204,6 +213,24 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   tt$env$cond2var <- cond2var
 
 
+  if (respscale == 'log') {
+    if (any(spdf@data[[respvar]] <= 0)) stop('Cannot use log scale when respvar has zero or negative values')
+  }
+
+  if (cond1scale == 'log') {
+    if (any(spdf@data[[cond1var]] <= 0)) stop('Cannot use log scale when cond1var has zero or negative values')
+  }
+
+  if (cond2scale == 'log') {
+    if (any(spdf@data[[cond2var]] <= 0)) stop('Cannot use log scale when cond2var has zero or negative values')
+  }
+
+
+  tt$env$respscale <- respscale
+  tt$env$cond1scale <- cond1scale
+  tt$env$cond2scale <- cond2scale
+
+
   # Data prep -----
   n <- 9 # 9 plots from 3x3 panel
 
@@ -224,9 +251,9 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
 
 
-  resp <- spdf@data[, respvar]
-  cond1 <- spdf@data[, cond1var]
-  cond2 <- spdf@data[, cond2var]
+  resp <- spdf@data[[respvar]]
+  cond1 <- spdf@data[[cond1var]]
+  cond2 <- spdf@data[[cond2var]]
 
   if (!is.numeric(resp)) {
     stop("Study variable must be numeric")
@@ -261,11 +288,12 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
   # If break points not given, use default of equal quantiles. Otherwise, use user-defined
   # break points
-  if (identical(respbreaks, 3)) {
+  if (identical(respbreaks, 2)) {
     respcuts <- quantile(resp, probs = c(1/3, 2/3))
   } else {
     respcuts <- respbreaks
   }
+
 
   # Categorical variable corresponding to the intervals in study variable
   spdf@data$resp_cat <- cut_interval(resp, respcuts)
@@ -286,13 +314,13 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
   } else {
 
-    if (identical(cond1breaks, 3)) {
+    if (identical(cond1breaks, 2)) {
       cond1cuts <- quantile(cond1, probs = c(1/3, 2/3))
     } else {
       cond1cuts <- cond1breaks
     }
 
-    if (identical(cond2breaks, 3)) {
+    if (identical(cond2breaks, 2)) {
       cond2cuts <- quantile(cond2, probs = c(1/3, 2/3))
     } else {
       cond2cuts <- cond2breaks
@@ -434,14 +462,14 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   # Update function to be used on sliders
   updateGraph <- function() {
 
-    respcuts <- c(as.numeric(tkcget(tt$env$scaletop, "-min")),
-                  as.numeric(tkcget(tt$env$scaletop, "-max")))
+    respcuts <- c(convert_scale2act(respscale, as.numeric(tkcget(tt$env$scaletop, "-min")), resp),
+                  convert_scale2act(respscale, as.numeric(tkcget(tt$env$scaletop, "-max")), resp))
 
-    cond1cuts <- c(as.numeric(tkcget(tt$env$scaleright, "-min")),
-                   as.numeric(tkcget(tt$env$scaleright, "-max")))
+    cond1cuts <- c(convert_scale2act(cond1scale, as.numeric(tkcget(tt$env$scaleright, "-min")), cond1),
+                   convert_scale2act(cond1scale, as.numeric(tkcget(tt$env$scaleright, "-max")), cond1))
 
-    cond2cuts <- c(as.numeric(tkcget(tt$env$scalebottom, "-min")),
-                   as.numeric(tkcget(tt$env$scalebottom, "-max")))
+    cond2cuts <- c(convert_scale2act(cond2scale, as.numeric(tkcget(tt$env$scalebottom, "-min")), cond2),
+                   convert_scale2act(cond2scale, as.numeric(tkcget(tt$env$scalebottom, "-max")), cond2))
 
 
     resp_cat <- cut_interval(resp, respcuts)
@@ -471,9 +499,17 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
     cond1cuts <- attr(spdf@data$cond1_cat, 'cuts')
     cond2cuts <- attr(spdf@data$cond2_cat, 'cuts')
 
-    tcl(tt$env$scaletop, 'configure', min = pretty_scale(respcuts[1]), max = pretty_scale(respcuts[2]))
-    tcl(tt$env$scaleright, 'configure', min = pretty_scale(cond1cuts[1]), max = pretty_scale(cond1cuts[2]))
-    tcl(tt$env$scalebottom, 'configure', min = pretty_scale(cond2cuts[1]), max = pretty_scale(cond2cuts[2]))
+    tcl(tt$env$scaletop, 'configure',
+        min = convert_act2scale(respscale, respcuts[1], resp),
+        max = convert_act2scale(respscale, respcuts[2], resp))
+
+    tcl(tt$env$scaleright, 'configure',
+        min = convert_act2scale(cond1scale, cond1cuts[1], cond1),
+        max = convert_act2scale(cond1scale, cond1cuts[2], cond1))
+
+    tcl(tt$env$scalebottom, 'configure',
+        min = convert_act2scale(cond2scale, cond2cuts[1], cond2),
+        max = convert_act2scale(cond2scale, cond2cuts[2], cond2))
 
 
     orig_df <- data_wcol(resp = resp, resp_cat = spdf@data$resp_cat,
@@ -509,25 +545,38 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
 
   tt$env$scaletop <- tcl('::minmax_scale2_h', l_subwin(tt, 'scaletop'),
-                         from = pretty_scale(min(resp)),
-                         to = pretty_scale(max(resp)),
-                         min = pretty_scale(attr(spdf@data$resp_cat, 'cuts')[1]),
-                         max = pretty_scale(attr(spdf@data$resp_cat, 'cuts')[2]),
+                         from = convert_act2scale(respscale, min(resp), resp),
+                         to = convert_act2scale(respscale, max(resp), resp),
+                         min = convert_act2scale(respscale, attr(spdf@data$resp_cat, 'cuts')[1], resp),
+                         max = convert_act2scale(respscale, attr(spdf@data$resp_cat, 'cuts')[2], resp),
+                         min_act = min(resp),
+                         max_act = max(resp),
+                         act = paste(resp, collapse = ' '),
+                         scale = respscale,
                          resolution = 0.1,
                          seg1col = seg1col, seg2col = seg2col, seg3col = seg3col)
 
+
   tt$env$scaleright <- tcl('::minmax_scale2_v', l_subwin(tt, 'scaleright'),
-                           from = pretty_scale(min(cond1)),
-                           to = pretty_scale(max(cond1)),
-                           min = pretty_scale(attr(spdf@data$cond1_cat, 'cuts')[1]),
-                           max = pretty_scale(attr(spdf@data$cond1_cat, 'cuts')[2]),
+                           from = convert_act2scale(cond1scale, min(cond1), cond1),
+                           to = convert_act2scale(cond1scale, max(cond1), cond1),
+                           min = convert_act2scale(cond1scale, attr(spdf@data$cond1_cat, 'cuts')[1], cond1),
+                           max = convert_act2scale(cond1scale, attr(spdf@data$cond1_cat, 'cuts')[2], cond1),
+                           min_act = min(cond1),
+                           max_act = max(cond1),
+                           act = paste(cond1, collapse = ' '),
+                           scale = cond1scale,
                            resolution = 0.1)
 
   tt$env$scalebottom <- tcl('::minmax_scale2_h', l_subwin(tt, 'scalebottom'),
-                            from = pretty_scale(min(cond2)),
-                            to = pretty_scale(max(cond2)),
-                            min = pretty_scale(attr(spdf@data$cond2_cat, 'cuts')[1]),
-                            max = pretty_scale(attr(spdf@data$cond2_cat, 'cuts')[2]),
+                            from = convert_act2scale(cond2scale, min(cond2), cond2),
+                            to = convert_act2scale(cond2scale, max(cond2), cond2),
+                            min = convert_act2scale(cond2scale, attr(spdf@data$cond2_cat, 'cuts')[1], cond2),
+                            max = convert_act2scale(cond2scale, attr(spdf@data$cond2_cat, 'cuts')[2], cond2),
+                            min_act = min(cond2),
+                            max_act = max(cond2),
+                            act = paste(cond2, collapse = ' '),
+                            scale = cond2scale,
                             resolution = 0.1)
 
   tcl(tt$env$scaletop, 'configure', command = function(...) updateGraph())
@@ -583,12 +632,16 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
 
     respvar_i <- tclVar(respvar)
-    box.respvarvar <- ttkcombobox(var_selector, values = vars,
-                                  textvariable = respvar_i,
-                                  state = 'readonly')
+    box.respvar <- ttkcombobox(var_selector, values = vars,
+                               textvariable = respvar_i,
+                               state = 'readonly')
     respvar.lab_i <- tclVar(ifelse(is.null(respvar.lab), '', respvar.lab))
-    entry.respvar.lab <- tkentry(var_selector, textvariable = respvar.lab_i, width = 30)
+    entry.respvar.lab <- tkentry(var_selector, textvariable = respvar.lab_i, width = 25)
 
+    respvar.scale_i <- tclVar(respscale)
+    respvar.scaleact <- tkradiobutton(var_selector, variable = respvar.scale_i, value = 'actual')
+    respvar.scalepct <- tkradiobutton(var_selector, variable = respvar.scale_i, value = 'percent')
+    respvar.scalelog <- tkradiobutton(var_selector, variable = respvar.scale_i, value = 'log')
 
 
     cond1var_i <- tclVar(cond1var)
@@ -596,7 +649,12 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                                 textvariable = cond1var_i,
                                 state = 'readonly')
     cond1var.lab_i <- tclVar(ifelse(is.null(cond1var.lab), '', cond1var.lab))
-    entry.cond1var.lab <- tkentry(var_selector, textvariable = cond1var.lab_i, width = 30)
+    entry.cond1var.lab <- tkentry(var_selector, textvariable = cond1var.lab_i, width = 25)
+
+    cond1var.scale_i <- tclVar(cond1scale)
+    cond1var.scaleact <- tkradiobutton(var_selector, variable = cond1var.scale_i, value = 'actual')
+    cond1var.scalepct <- tkradiobutton(var_selector, variable = cond1var.scale_i, value = 'percent')
+    cond1var.scalelog <- tkradiobutton(var_selector, variable = cond1var.scale_i, value = 'log')
 
 
     cond2var_i <- tclVar(cond2var)
@@ -604,31 +662,64 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                                 textvariable = cond2var_i,
                                 state = 'readonly')
     cond2var.lab_i <- tclVar(ifelse(is.null(cond2var.lab), '', cond2var.lab))
-    entry.cond2var.lab <- tkentry(var_selector, textvariable = cond2var.lab_i, width = 30)
+    entry.cond2var.lab <- tkentry(var_selector, textvariable = cond2var.lab_i, width = 25)
+
+    cond2var.scale_i <- tclVar(cond2scale)
+    cond2var.scaleact <- tkradiobutton(var_selector, variable = cond2var.scale_i, value = 'actual')
+    cond2var.scalepct <- tkradiobutton(var_selector, variable = cond2var.scale_i, value = 'percent')
+    cond2var.scalelog <- tkradiobutton(var_selector, variable = cond2var.scale_i, value = 'log')
 
 
+    tkgrid(tklabel(var_selector, text = 'Variables', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 0, column = 0)
 
-    tkgrid(tklabel(var_selector, text = 'Variable: ', anchor = 'w'),
-           tklabel(var_selector, text = 'Name: ', anchor = 'w'),
-           tklabel(var_selector, text = 'Label: ', anchor = 'w'),
-           sticky = 'w', padx = 5, pady = 5, row = 0)
+    tkgrid(tklabel(var_selector, text = 'Response:', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 0, column = 1, columnspan = 2)
 
+    tkgrid(tklabel(var_selector, text = 'Conditioning 1 (vert):', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 0, column = 3, columnspan = 2)
 
-    tkgrid(tklabel(var_selector, text = 'Response: ', anchor = 'w'),
-           box.respvarvar,
-           entry.respvar.lab,
-           sticky = 'w', padx = 5, pady = 5, row = 1)
-
-    tkgrid(tklabel(var_selector, text = 'Conditioning 1 (vertical): ', anchor = 'w'),
-           box.cond1var,
-           entry.cond1var.lab,
-           sticky = 'w', padx = 5, pady = 5, row = 2)
+    tkgrid(tklabel(var_selector, text = 'Conditioning 2 (hor):', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 0, column = 5, columnspan = 2)
 
 
-    tkgrid(tklabel(var_selector, text = 'Conditioning 2 (horizontal): ', anchor = 'w'),
-           box.cond2var,
-           entry.cond2var.lab,
+    tkgrid(tklabel(var_selector, text = 'Names: ', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 1, column = 0)
+
+    tkgrid(box.respvar, sticky = 'w', padx = 5, pady = 5, row = 1, column = 1, columnspan = 2)
+
+    tkgrid(box.cond1var, sticky = 'w', padx = 5, pady = 5, row = 1, column = 3, columnspan = 2)
+
+    tkgrid(box.cond2var, sticky = 'w', padx = 5, pady = 5, row = 1, column = 5, columnspan = 2)
+
+
+    tkgrid(tklabel(var_selector, text = 'Labels: ', anchor = 'w'),
+           sticky = 'w', padx = 5, pady = 5, row = 2, column = 0)
+
+    tkgrid(entry.respvar.lab, sticky = 'w', padx = 5, pady = 5, row = 2, column = 1, columnspan = 2)
+
+    tkgrid(entry.cond1var.lab, sticky = 'w', padx = 5, pady = 5, row = 2, column = 3, columnspan = 2)
+
+    tkgrid(entry.cond2var.lab, sticky = 'w', padx = 5, pady = 5, row = 2, column = 5, columnspan = 2)
+
+
+    tkgrid(tklabel(var_selector, text = 'Scales: ', anchor = 'w'),
+           tklabel(var_selector, text = 'Actual', anchor = 'w'), respvar.scaleact,
+           tklabel(var_selector, text = 'Actual', anchor = 'w'), cond1var.scaleact,
+           tklabel(var_selector, text = 'Actual', anchor = 'w'), cond2var.scaleact,
            sticky = 'w', padx = 5, pady = 5, row = 3)
+
+    tkgrid(tklabel(var_selector, text = '', anchor = 'w'),
+           tklabel(var_selector, text = 'Percent', anchor = 'w'), respvar.scalepct,
+           tklabel(var_selector, text = 'Percent', anchor = 'w'), cond1var.scalepct,
+           tklabel(var_selector, text = 'Percent', anchor = 'w'), cond2var.scalepct,
+           sticky = 'w', padx = 5, pady = 5, row = 4)
+
+    tkgrid(tklabel(var_selector, text = '', anchor = 'w'),
+           tklabel(var_selector, text = 'Log', anchor = 'w'), respvar.scalelog,
+           tklabel(var_selector, text = 'Log', anchor = 'w'), cond1var.scalelog,
+           tklabel(var_selector, text = 'Log', anchor = 'w'), cond2var.scalelog,
+           sticky = 'w', padx = 5, pady = 5, row = 5)
 
 
     # Font size
@@ -700,17 +791,25 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       tcl(submit, 'configure', state = 'disabled')
       tcl('tk', 'busy', tt_inspector)
 
-      if (tclvalue(respvar_i) == tt$env$respvar) {
+
+      respscale_new <- tclvalue(respvar.scale_i)
+      cond1scale_new <- tclvalue(cond1var.scale_i)
+      cond2scale_new <- tclvalue(cond2var.scale_i)
+
+
+      if (tclvalue(respvar_i) == tt$env$respvar & respscale_new == tt$env$respscale) {
 
         respvar_new <- tt$env$respvar
+        resp_new <- spdf@data[[respvar_new]]
 
-        respbreaks_new <- c(as.numeric(tkcget(tt$env$scaletop, "-min")),
-                            as.numeric(tkcget(tt$env$scaletop, "-max")))
+        respbreaks_new <- c(convert_scale2act(respscale_new, as.numeric(tkcget(tt$env$scaletop, "-min")), resp_new),
+                            convert_scale2act(respscale_new, as.numeric(tkcget(tt$env$scaletop, "-max")), resp_new))
+
 
       } else {
 
         respvar_new <- tclvalue(respvar_i)
-        respbreaks_new <- 3
+        respbreaks_new <- 2
 
         tt$env$respvar <- respvar_new
 
@@ -724,17 +823,19 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       }
 
 
-      if (tclvalue(cond1var_i) == tt$env$cond1var) {
+      if (tclvalue(cond1var_i) == tt$env$cond1var & cond1scale_new == tt$env$cond1scale) {
 
         cond1var_new <- tt$env$cond1var
+        cond1_new <- spdf@data[[cond1var_new]]
 
-        cond1breaks_new <- c(as.numeric(tkcget(tt$env$scaleright, '-min')),
-                             as.numeric(tkcget(tt$env$scaleright, '-max')))
+        cond1breaks_new <- c(convert_scale2act(cond1scale_new, as.numeric(tkcget(tt$env$scaleright, '-min')), cond1_new),
+                             convert_scale2act(cond1scale_new, as.numeric(tkcget(tt$env$scaleright, '-max')), cond1_new))
+
 
       } else {
 
         cond1var_new <- tclvalue(cond1var_i)
-        cond1breaks_new <-3
+        cond1breaks_new <- 2
 
         tt$env$cond1var <- cond1var_new
 
@@ -748,17 +849,19 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       }
 
 
-      if (tclvalue(cond2var_i) == tt$env$cond2var) {
+      if (tclvalue(cond2var_i) == tt$env$cond2var &  cond2scale_new == tt$env$cond2scale) {
 
         cond2var_new <- tt$env$cond2var
+        cond2_new <- spdf@data[[cond2var_new]]
 
-        cond2breaks_new <- c(as.numeric(tkcget(tt$env$scalebottom, '-min')),
-                             as.numeric(tkcget(tt$env$scalebottom, '-max')))
+        cond2breaks_new <- c(convert_scale2act(cond2scale_new, as.numeric(tkcget(tt$env$scalebottom, '-min')), cond2_new),
+                             convert_scale2act(cond2scale_new, as.numeric(tkcget(tt$env$scalebottom, '-max')), cond2_new))
+
 
       } else {
 
         cond2var_new <- tclvalue(cond2var_i)
-        cond2breaks_new <-3
+        cond2breaks_new <- 2
 
         tt$env$cond2var <- cond2var_new
 
@@ -769,6 +872,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       } else {
         cond2var.lab_new <- tclvalue(cond2var.lab_i)
       }
+
 
 
       optimize_new <- as.character(tclvalue(optValue))
@@ -784,6 +888,8 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                cond2var = cond2var_new, cond2var.lab = cond2var.lab_new,
                respbreaks = respbreaks_new,
                cond1breaks = cond1breaks_new, cond2breaks = cond2breaks_new,
+               respscale = respscale_new,
+               cond1scale = cond1scale_new, cond2scale = cond2scale_new,
                size = size_new, seg1col = seg1col, seg2col = seg2col, seg3col = seg3col,
                optimize = optimize_new, otry = otry,
                title = title)
@@ -945,50 +1051,44 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
 }
 
 
-# # Change scale from actual numbers to percent or log scale
-# convert_act2scale <- function(scale = c('unchanged', 'percent', 'log'), val1, val2, vals = NULL) {
-#
-#   if (scale == 'unchanged') {
-#
-#     c(val1, val2) %>% pretty_scale()
-#
-#   } else if (scale == 'percent') {
-#
-#     c((val1 - min(vals))/(max(vals) - min(vals)),
-#       (val2 - min(vals))/(max(vals) - min(vals))) %>% pretty_scale()
-#
-#   } else {
-#
-#     if (any(vals <= 0)) stop('Cannot use log scale for variables containing zero or negative values')
-#
-#     log(c(val1, val2)) %>% pretty_scale()
-#
-#   }
-#
-# }
-#
-#
-# convert_scale2act <- function(scale = c('unchanged', 'percent', 'log'), s1, s2, vals = NULL) {
-#
-#   if (scale == 'unchanged') {
-#
-#     c(s1, s2) %>% pretty_scale()
-#
-#   } else if (scale == 'percent') {
-#
-#     min(vals) + c(pct1, pct2) * diff(range(vals)) %>% pretty_scale()
-#
-#   } else {
-#
-#     10^(c(s1, s2)) %>% pretty_scale()
-#
-#   }
-#
-# }
+# Change scale from actual numbers to percent or log scale
+convert_act2scale <- function(scale = c('actual', 'percent', 'log'), val, vals = NULL) {
+
+  if (scale == 'actual') {
+
+    val
+
+  } else if (scale == 'percent') {
+
+    Fn <- ecdf(vals)
+    Fn(val) * 100
+
+  } else if (scale == 'log') {
+
+    if (any(vals <= 0)) stop('Cannot use log scale for variables containing zero or negative values')
+
+    log(val)
+
+  }
+
+}
 
 
-# Round values to 1 decimal place and pervent scientific notation
-pretty_scale <- function(val) {
-  round(val, 1)
+convert_scale2act <- function(scale = c('actual', 'percent', 'log'), val, vals = NULL) {
+
+  if (scale == 'actual') {
+
+    val
+
+  } else if (scale == 'percent') {
+
+    quantile(vals, probs = val/100)
+
+  } else if (scale == 'log') {
+
+    exp(val)
+
+  }
+
 }
 

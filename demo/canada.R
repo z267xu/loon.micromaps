@@ -24,7 +24,7 @@ southon_cds <- c("Stormont", "Dundas and Glengarry", "Prescott and Russell", "Ot
 
 
 southon_ids <- cd@data %>%
-  filter(CDNAME %in% southon_cds & PRNAME == 'Ontario') %>%
+  filter(PRNAME == 'Ontario' & CDNAME %in% southon_cds) %>%
   select(ind) %>%
   unlist() %>%
   as.character() %>% as.numeric()
@@ -56,5 +56,6 @@ cc <- l_ccmaps(spdf = cd_southon,
                respvar = 'pct_immigrants', respvar.lab = '% Immigrant Population',
                cond1var = 'bachelor_above', cond1var.lab = '% with Bachelor Education',
                cond2var = 'pop_density', cond2var.lab = 'Population Density',
-               seg1col = 'yellow', seg3col = 'orange')
+               seg1col = 'yellow', seg3col = 'orange',
+               respscale = 'percent', cond1scale = 'actual', cond2scale = 'log')
 

@@ -8,6 +8,7 @@ data("USstates")
 statedata <- read.csv("data/usa_states/statedata.csv")
 
 USstates@data <- merge(USstates@data, statedata, by.x = "ST", by.y = "state.abbr")
+USstates@data[['income']] <- USstates@data[['income']]/1000
 
 
 # Draw micromaps -----
@@ -27,6 +28,7 @@ cc <- l_ccmaps(spdf = USstates, title = 'CCmaps',
                respvar = 'lung_bronch_death', respvar.lab = 'Lung & Bronchus Cancer Death Rate',
                cond1var = 'pm25', cond1var.lab = 'Fine Particulate Matter Level',
                cond2var = 'income', cond2var.lab = 'Income per Capita',
+               respscale = 'actual', cond1scale = 'actual', cond2scale = 'actual',
                optimize = T, otry = 10)
 # Takes ~10s to run. For faster results without optimizing R^2, set optimize=FALSE
 

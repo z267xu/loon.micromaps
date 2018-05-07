@@ -7,9 +7,9 @@
 #' @param mm_inspector Whether to draw custom inspector for micromaps, which
 #'   allows for variable selection, variable label update, font size adjustment,
 #'   and setting grouping of points. Defaults to TRUE
+#' @param title Title for micromap. Appears in the title bar of the toplevel window
 #' @param map.label Label for maps (rightmost) panel
 #' @param lab.label Label for labels (leftmost) panel
-#' @param title Title for micromap. Appears in the title bar of the toplevel window
 #' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
 #'   and attributes. It should contain statistics used for comparing between regions
 #' @param grouping An optional character vector specifying how many points to
@@ -76,7 +76,7 @@
 #' }
 #'
 l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
-                        map.label = 'Map', lab.label = 'Labels', title = 'Micromaps',
+                        title = 'Micromaps', map.label = 'Map', lab.label = 'Labels',
                         spdf,
                         grouping = NULL, n_groups = NULL,
                         variables, num_optvars = NULL,

@@ -4,8 +4,8 @@
 \alias{l_micromaps}
 \title{Linked micromaps in loon}
 \usage{
-l_micromaps(top = tktoplevel(), mm_inspector = TRUE, map.label = "Map",
-  lab.label = "Labels", title = "Micromaps", spdf, grouping = NULL,
+l_micromaps(top = tktoplevel(), mm_inspector = TRUE, title = "Micromaps",
+  map.label = "Map", lab.label = "Labels", spdf, grouping = NULL,
   n_groups = NULL, variables, num_optvars = NULL, spacing = c("equal",
   "max"), color = NULL, size = 6, linkingKey = NULL,
   linkingGroup = NULL, sync = c("pull", "push"), ...)
@@ -17,11 +17,11 @@ l_micromaps(top = tktoplevel(), mm_inspector = TRUE, map.label = "Map",
 allows for variable selection, variable label update, font size adjustment,
 and setting grouping of points. Defaults to TRUE}
 
+\item{title}{Title for micromap. Appears in the title bar of the toplevel window}
+
 \item{map.label}{Label for maps (rightmost) panel}
 
 \item{lab.label}{Label for labels (leftmost) panel}
-
-\item{title}{Title for micromap. Appears in the title bar of the toplevel window}
 
 \item{spdf}{\code{SpatialPolygonsDataFrame} object to hold polygon coordinates
 and attributes. It should contain statistics used for comparing between regions}

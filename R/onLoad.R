@@ -3,7 +3,48 @@
 
 .onLoad <- function(libname, pkgname) {
 
-  # Note that one \ is escaped with \\
+  # Empirical cumulative distribution Value
+  .Tcl(
+    '
+    proc QuantilesRawData { data confidence } {
+
+    set conf [expr $confidence]
+    set confidence [expr $conf/100]
+
+    set data_l [split $data]
+
+    set vals {}
+    foreach x $data_l {
+      if { $x != {}} {
+        set v [expr $x]
+      }
+      lappend vals $v
+    }
+
+
+    set n [llength $vals]
+
+    set sorted_data [lsort -real -increasing $vals]
+
+    set index [expr {1 + ($n - 1) * $confidence}]
+
+    set lo_d [expr {floor($index)}]
+    set lo [expr {int($lo_d) - 1}]
+    set hi_d [expr {ceil($index)}]
+    set hi [expr {int($hi_d) - 1}]
+
+    set qs [lindex $sorted_data $lo]
+    set xs [lindex $sorted_data $hi]
+
+    set h [expr {$index - $lo - 1}]
+    set ret [expr { (1 - $h)*$qs + $h*$xs}]
+
+    return $ret
+    }
+    '
+  )
+
+
 
   # Definition of modified horizontal MinMaxSlider (2 handles)
   .Tcl(
@@ -14,8 +55,8 @@
 
     variable path canvas from to min max resolution seg1col seg2col seg3col\\
     b_w b_e b_s b_n slider_width slider_width2 slider_peak pad_text\\
-    current_slider n_pix_per_res n_pix_per_res2\\
-    mouse_x mouse_y
+    current_slider n_pix_per_res n_pix_per_res2 scale\\
+    mouse_x mouse_y act min_act max_act
 
     constructor {Path} {
 
@@ -40,11 +81,15 @@
     my New_state to double 1 1
     my New_state min double 1 0
     my New_state max double 1 1
+    my New_state min_act double 1 0
+    my New_state max_act double 1 1
+    my New_state act string 1 ""
     my New_state resolution positive_double 1 0.01
     my New_state command string 1 ""
     my New_state seg1col colorOrTransparent 1 "darkgrey"
     my New_state seg2col colorOrTransparent 1 "darkgrey"
     my New_state seg3col colorOrTransparent 1 "darkgrey"
+    my New_state scale factor 1 actual {actual percent log}
 
     my SetStateDescription from\\
     "from value of scale"
@@ -54,6 +99,8 @@
     "position of min slider"
     my SetStateDescription max\\
     "position of max slider"
+    my SetStateDescription act\\
+    "actual values"
     my SetStateDescription resolution\\
     "resolution for the scale"
     my SetStateDescription seg1col\\
@@ -64,6 +111,8 @@
     "color of the third segment of the scale"
     my SetStateDescription command\\
     "callback that is evaluated with any state change"
+    my SetStateDescription scale\\
+    "what scale to use"
 
     }
 
@@ -170,25 +219,101 @@
     [expr {$loc_min - $slider_width}] $y0 $loc_min $y1\\
     -fill white -tag min
 
-    $canvas create text\\
-    [expr {$loc_min - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
-    -text [format "%.3g" $min] -anchor n -justify center
+    if {$scale == "actual"} {
 
-    $canvas create text\\
-    [expr {$x0 - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
-    -text [format "%.3g" $from] -anchor n -justify center
+      $canvas create text\\
+      [expr {$loc_min - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+      -text [format "%.3g" $min] -anchor n -justify center
+
+    } elseif {$scale == "percent"} {
+
+      set min_pct [QuantilesRawData $act $min]
+
+      $canvas create text\\
+      [expr {$loc_min - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+      -text [format "%.3g" $min_pct] -anchor n -justify center
+
+    } elseif {$scale == "log"} {
+
+      set min_log [expr {exp($min)}]
+
+      $canvas create text\\
+      [expr {$loc_min - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+      -text [format "%.3g" $min_log] -anchor n -justify center
+
+    }
+
+    if {$scale == "actual"} {
+
+      $canvas create text\\
+      [expr {$x0 - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+      -text [format "%.3g" $from] -anchor n -justify center
+
+    } elseif {$scale == "percent"} {
+
+      $canvas create text\\
+      [expr {$x0 - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+      -text [format "%.3g" $min_act] -anchor n -justify center
+
+    } elseif {$scale == "log"} {
+
+      $canvas create text\\
+      [expr {$x0 - $slider_width2}] [expr {$y1 + $slider_peak + $pad_text}]\\
+      -text [format "%.3g" $min_act] -anchor n -justify center
+
+    }
+
 
     $canvas create rect\\
     $loc_max $y0 [expr {$loc_max + $slider_width}] $y1\\
     -fill white -tag max
 
-    $canvas create text\\
-    [expr {$loc_max + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
-    -text [format "%.3g" $max] -anchor s -justify center
 
-    $canvas create text\\
-    [expr {$x1 + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
-    -text [format "%.3g" $to] -anchor s -justify center
+    if {$scale == "actual"} {
+
+      $canvas create text\\
+      [expr {$loc_max + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+      -text [format "%.3g" $max] -anchor s -justify center
+
+    } elseif {$scale == "percent"} {
+
+      set max_pct [QuantilesRawData $act $max]
+
+      $canvas create text\\
+      [expr {$loc_max + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+      -text [format "%.3g" $max_pct] -anchor s -justify center
+
+    } elseif {$scale == "log"} {
+
+      set max_log [expr {exp($max)}]
+
+      $canvas create text\\
+      [expr {$loc_max + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+      -text [format "%.3g" $max_log] -anchor s -justify center
+
+    }
+
+
+    if {$scale == "actual"} {
+
+      $canvas create text\\
+      [expr {$x1 + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+      -text [format "%.3g" $to] -anchor s -justify center
+
+    } elseif {$scale == "percent"} {
+
+      $canvas create text\\
+      [expr {$x1 + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+      -text [format "%.3g" $max_act] -anchor s -justify center
+
+    } elseif {$scale == "log"} {
+
+      $canvas create text\\
+      [expr {$x1 + $slider_width2}] [expr {$y0 - $slider_peak - $pad_text}]\\
+       -text [format "%.3g" $max_act] -anchor s -justify center
+
+    }
+
 
     set n_pix_per_res [expr {$dx/($to - $from)*$resolution}]
     set n_pix_per_res2 [expr {$n_pix_per_res/2.0}]
@@ -305,8 +430,8 @@
 
     variable path canvas from to min max resolution seg1col seg2col seg3col\\
     b_w b_e b_s b_n slider_width slider_width2 slider_peak pad_text\\
-    current_slider n_pix_per_res n_pix_per_res2\\
-    mouse_x mouse_y
+    current_slider n_pix_per_res n_pix_per_res2 scale\\
+    mouse_x mouse_y act min_act max_act
 
     constructor {Path} {
 
@@ -331,11 +456,15 @@
     my New_state to double 1 1
     my New_state min double 1 0
     my New_state max double 1 1
+    my New_state min_act double 1 0
+    my New_state max_act double 1 1
+    my New_state act string 1 ""
     my New_state resolution positive_double 1 0.01
     my New_state command string 1 ""
     my New_state seg1col colorOrTransparent 1 "darkgrey"
     my New_state seg2col colorOrTransparent 1 "darkgrey"
     my New_state seg3col colorOrTransparent 1 "darkgrey"
+    my New_state scale factor 1 actual {actual percent log}
 
     my SetStateDescription from\\
     "from value of scale"
@@ -345,6 +474,12 @@
     "position of min slider"
     my SetStateDescription max\\
     "position of max slider"
+    my SetStateDescription act\\
+    "actual values"
+    my SetStateDescription min_act\\
+    "actual min value"
+    my SetStateDescription max_act\\
+    "actual max value"
     my SetStateDescription resolution\\
     "resolution for the scale"
     my SetStateDescription seg1col\\
@@ -355,6 +490,8 @@
     "color of the third segment of the scale"
     my SetStateDescription command\\
     "callback that is evaluated with any state change"
+    my SetStateDescription scale\\
+    "what scale to use"
 
     }
 
@@ -463,25 +600,102 @@
     $x0 $loc_min $x1 [expr {$loc_min + $slider_width}]\\
     -fill white -tag min
 
-    $canvas create text\\
-    [expr {$x0 - 6*$pad_text}] $loc_min\\
-    -text [format "%.3g" $min] -anchor n -justify center
 
-    $canvas create text\\
-    [expr {$x0 - 6*$pad_text}] $y1\\
-    -text [format "%.3g" $from] -anchor n -justify center
+    if {$scale == "actual"} {
+
+      $canvas create text\\
+      [expr {$x0 - 6*$pad_text}] $loc_min\\
+      -text [format "%.3g" $min] -anchor n -justify center
+
+    } elseif {$scale == "percent"} {
+
+      set min_pct [QuantilesRawData $act $min]
+
+      $canvas create text\\
+      [expr {$x0 - 6*$pad_text}] $loc_min\\
+      -text [format "%.3g" $min_pct] -anchor n -justify center
+
+    } elseif {$scale == "log"} {
+
+      set min_log [expr {exp($min)}]
+
+      $canvas create text\\
+      [expr {$x0 - 6*$pad_text}] $loc_min\\
+      -text [format "%.3g" $min_log] -anchor n -justify center
+
+    }
+
+
+    if {$scale == "actual"} {
+
+      $canvas create text\\
+      [expr {$x0 - 6*$pad_text}] $y1\\
+      -text [format "%.3g" $from] -anchor n -justify center
+
+    } elseif {$scale == "percent"} {
+
+      $canvas create text\\
+      [expr {$x0 - 6*$pad_text}] $y1\\
+      -text [format "%.3g" $min_act] -anchor n -justify center
+
+    } elseif {$scale == "log"} {
+
+      $canvas create text\\
+      [expr {$x0 - 6*$pad_text}] $y1\\
+      -text [format "%.3g" $min_act] -anchor n -justify center
+
+    }
+
 
     $canvas create rect\\
     $x0 $loc_max $x1 [expr {$loc_max - $slider_width}]\\
     -fill white -tag max
 
-    $canvas create text\\
-    [expr {$x1 + 6*$pad_text}] $loc_max\\
-    -text [format "%.3g" $max] -anchor s -justify center
+    if {$scale == "actual"} {
 
-    $canvas create text\\
-    [expr {$x1 + 6*$pad_text}] $y0\\
-    -text [format "%.3g" $to] -anchor s -justify center
+      $canvas create text\\
+      [expr {$x1 + 6*$pad_text}] $loc_max\\
+      -text [format "%.3g" $max] -anchor s -justify center
+
+    } elseif {$scale == "percent"} {
+
+      set max_pct [QuantilesRawData $act $max]
+
+      $canvas create text\\
+      [expr {$x1 + 6*$pad_text}] $loc_max\\
+      -text [format "%.3g" $max_pct] -anchor s -justify center
+
+    } elseif {$scale == "log"} {
+
+      set max_log [expr {exp($max)}]
+
+      $canvas create text\\
+      [expr {$x1 + 6*$pad_text}] $loc_max\\
+      -text [format "%.3g" $max_log] -anchor s -justify center
+
+    }
+
+
+    if {$scale == "actual"} {
+
+      $canvas create text\\
+      [expr {$x1 + 6*$pad_text}] $y0\\
+      -text [format "%.3g" $to] -anchor s -justify center
+
+    } elseif {$scale == "percent"} {
+
+      $canvas create text\\
+      [expr {$x1 + 6*$pad_text}] $y0\\
+      -text [format "%.3g" $max_act] -anchor s -justify center
+
+    } elseif {$scale == "log"} {
+
+      $canvas create text\\
+      [expr {$x1 + 6*$pad_text}] $y0\\
+      -text [format "%.3g" $max_act] -anchor s -justify center
+
+    }
+
 
     set n_pix_per_res [expr {$dy/($to - $from)*$resolution}]
     set n_pix_per_res2 [expr {$n_pix_per_res/2.0}]
