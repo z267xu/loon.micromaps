@@ -68,8 +68,7 @@ Cannot be 'cornsilk'. Defaults to 'darkgrey'}
 Cannot be 'cornsilk'. Defaults to 'red'}
 
 \item{optimize}{Logical value indicating whether panel assignment should be
-optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE,
-in which case the conditioning data is divided into tertiles}
+optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE}
 
 \item{otry}{Integer (greater than 0) indicating number of values to try
 for optimization (see above). Required if \code{optimize = TRUE}.
