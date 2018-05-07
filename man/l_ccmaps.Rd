@@ -10,7 +10,7 @@ l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
   respscale = c("actual", "percent", "log"), cond1scale = c("actual",
   "percent", "log"), cond2scale = c("actual", "percent", "log"), size = 10,
   seg1col = "blue", seg2col = "darkgrey", seg3col = "red",
-  optimize = FALSE, otry = 10)
+  optimize = FALSE, otry = 20)
 }
 \arguments{
 \item{tt}{Tk top level window. Defaults to a new window}
@@ -73,7 +73,7 @@ in which case the conditioning data is divided into tertiles}
 
 \item{otry}{Integer (greater than 0) indicating number of values to try
 for optimization (see above). Required if \code{optimize = TRUE}.
-Defaults to 10. A higher \code{otry} value leads to more precise estimates
+Defaults to 20. A higher \code{otry} value leads to more precise estimates
 at the cost of longer computation time}
 
 \item{cond1.lab}{Label for first conditional variable for slider. Defaults to NULL,

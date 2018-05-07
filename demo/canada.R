@@ -57,5 +57,6 @@ cc <- l_ccmaps(spdf = cd_southon,
                cond1var = 'bachelor_above', cond1var.lab = '% with Bachelor Education',
                cond2var = 'pop_density', cond2var.lab = 'Population Density',
                seg1col = 'yellow', seg3col = 'orange',
-               respscale = 'percent', cond1scale = 'actual', cond2scale = 'log')
+               respscale = 'percent', cond1scale = 'actual', cond2scale = 'log',
+               optimize = TRUE)
 

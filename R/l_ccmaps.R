@@ -48,7 +48,7 @@
 #'   in which case the conditioning data is divided into tertiles
 #' @param otry Integer (greater than 0) indicating number of values to try
 #'   for optimization (see above). Required if \code{optimize = TRUE}.
-#'   Defaults to 10. A higher \code{otry} value leads to more precise estimates
+#'   Defaults to 20. A higher \code{otry} value leads to more precise estimates
 #'   at the cost of longer computation time
 #'
 #' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select transmute mutate_all
@@ -83,7 +83,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
                      cond1scale = c('actual', 'percent', 'log'),
                      cond2scale = c('actual', 'percent', 'log'),
                      size = 10, seg1col = 'blue', seg2col = 'darkgrey', seg3col = 'red',
-                     optimize = FALSE, otry = 10) {
+                     optimize = FALSE, otry = 20) {
 
 
   # Input checks -----
@@ -1003,7 +1003,7 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
   # otry number of values to try for each conditioning variable. Picks {otry choose 2} pairs (since
   # order doesn't matter) of points as the middle two break points for partioning, as well as
   # cases where the two middle break points are equal
-  cond1_seq <- seq(min(cond1), max(cond1), length.out = otry)
+  cond1_seq <- quantile(cond1, probs = seq(0, 1, length.out = otry)) %>% unique()
 
   cond1_combn <- cbind(combn(cond1_seq, m = 2),
                        matrix(rep(cond1_seq, times = 2), nrow = 2, byrow = T))
@@ -1011,7 +1011,7 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
   cond1_combn_str <- apply(cond1_combn, 2, function(x) paste0(x, collapse = ', '))
 
 
-  cond2_seq <- seq(min(cond2), max(cond2), length.out = otry)
+  cond2_seq <- quantile(cond2, probs = seq(0, 1, length.out = otry)) %>% unique()
 
   cond2_combn <- cbind(combn(cond2_seq, 2),
                        matrix(rep(cond2_seq, times = 2), nrow = 2, byrow = T))
@@ -1045,6 +1045,7 @@ r2_optimize <- function(otry, resp, cond1, cond2) {
   r2_df$r2 <- unlist(r2s)
 
   r2_df %>%
+    sample_n(., nrow(r2_df)) %>%
     arrange(desc(r2)) %>%
     data.frame()
 
