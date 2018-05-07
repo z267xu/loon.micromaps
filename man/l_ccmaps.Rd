@@ -97,6 +97,7 @@ columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1],
 l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
          spdf = columbus,
          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
+         respscale = "actual", cond1scale = "actual", cond2scale = "actual",
          optimize = FALSE)
 
 }
