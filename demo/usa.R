@@ -29,5 +29,5 @@ cc <- l_ccmaps(spdf = USstates, title = 'CCmaps',
                cond1var = 'pm25', cond1var.lab = 'Fine Particulate Matter Level',
                cond2var = 'income', cond2var.lab = 'Income per Capita',
                respscale = 'actual', cond1scale = 'actual', cond2scale = 'actual',
-               optimize = T)
+               optimize = TRUE)
 

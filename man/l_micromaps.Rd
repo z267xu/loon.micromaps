@@ -59,7 +59,7 @@ which are reserved colors}
 
 \item{linkingKey}{Linking mechanism in \code{loon}. Points with the same
 linkingKey value are linked together. Defaults to NULL, in which case the
-linkingKey values are index values from 0 to (number of points - 1)}
+linkingKey values are index values starting from 0}
 
 \item{linkingGroup}{Linking mechanism in \code{loon}. Displays with the same
 linkingGroup are linked together. Defaults to NULL, in which case the
