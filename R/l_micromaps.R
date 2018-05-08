@@ -904,7 +904,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
     }
 
     # Closes inspector window if the CCmaps display window is closed
-    tkbind(w, '<Destroy>', function() tkdestroy(tt_inspector))
+    tkbind(w$top, '<Destroy>', function() tkdestroy(tt_inspector))
 
     # Do not allow inspector window to close otherwise
     tcl("wm", "protocol", tt_inspector, "WM_DELETE_WINDOW",
