@@ -15,7 +15,8 @@ l_micromaps(top = tktoplevel(), mm_inspector = TRUE, title = "Micromaps",
 
 \item{mm_inspector}{Whether to draw custom inspector for micromaps, which
 allows for variable selection, variable label update, font size adjustment,
-and setting grouping of points. Defaults to TRUE}
+and setting grouping of points. Defaults to TRUE. Once created, the inspector
+can only be closed when the main display window is closed}
 
 \item{title}{Title for micromap. Appears in the title bar of the toplevel window}
 

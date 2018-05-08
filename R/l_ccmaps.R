@@ -6,7 +6,8 @@
 #' @param tt Tk top level window. Defaults to a new window
 #' @param cc_inspector Whether to draw the custom inspector for CCmaps, which
 #'   allows for variable selection, variable label update, font size adjustment
-#'   and option to optimize \eqn{R^2}. Defaults to TRUE
+#'   and option to optimize \eqn{R^2}. Defaults to TRUE. Once created, the inspector
+#'   can only be closed when the main display window is closed
 #' @param title Title of the map. Appears in the title bar of the toplevel window.
 #'   Defaults to "CCmaps"
 #' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
@@ -907,8 +908,12 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
     }
 
-    # Closes inspector if the CCmaps display window is closed
+    # Closes inspector window if the CCmaps display window is closed
     tkbind(w, '<Destroy>', function() tkdestroy(tt_inspector))
+
+    # Do not allow inspector window to close otherwise
+    tcl("wm", "protocol", tt_inspector, "WM_DELETE_WINDOW",
+        quote(cat('To close inspector, close the display window\n')))
 
     tt_inspector
 

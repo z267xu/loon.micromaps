@@ -17,7 +17,8 @@ l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
 
 \item{cc_inspector}{Whether to draw the custom inspector for CCmaps, which
 allows for variable selection, variable label update, font size adjustment
-and option to optimize \eqn{R^2}. Defaults to TRUE}
+and option to optimize \eqn{R^2}. Defaults to TRUE. Once created, the inspector
+can only be closed when the main display window is closed}
 
 \item{title}{Title of the map. Appears in the title bar of the toplevel window.
 Defaults to "CCmaps"}

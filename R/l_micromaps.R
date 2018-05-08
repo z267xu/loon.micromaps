@@ -6,7 +6,8 @@
 #' @param top Tk top level window. Defaults to a new window
 #' @param mm_inspector Whether to draw custom inspector for micromaps, which
 #'   allows for variable selection, variable label update, font size adjustment,
-#'   and setting grouping of points. Defaults to TRUE
+#'   and setting grouping of points. Defaults to TRUE. Once created, the inspector
+#'   can only be closed when the main display window is closed
 #' @param title Title for micromap. Appears in the title bar of the toplevel window
 #' @param map.label Label for maps (rightmost) panel
 #' @param lab.label Label for labels (leftmost) panel
@@ -902,8 +903,12 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     }
 
-    # Closes inspector if the CCmaps display window is closed
-    tkbind(w$top, '<Destroy>', function() tkdestroy(tt_inspector))
+    # Closes inspector window if the CCmaps display window is closed
+    tkbind(w, '<Destroy>', function() tkdestroy(tt_inspector))
+
+    # Do not allow inspector window to close otherwise
+    tcl("wm", "protocol", tt_inspector, "WM_DELETE_WINDOW",
+        quote(cat('To close inspector, close the display window\n')))
 
     tt_inspector
 
