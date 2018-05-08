@@ -3,7 +3,8 @@
 
 .onLoad <- function(libname, pkgname) {
 
-  # Empirical cumulative distribution Value
+  # Compute quantiles
+  # Adapted from: https://github.com/tcltk/tcllib/blob/master/modules/math/statistics.tcl
   .Tcl(
     '
     proc QuantilesRawData { data confidence } {
@@ -43,8 +44,6 @@
     }
     '
   )
-
-
 
   # Definition of modified horizontal MinMaxSlider (2 handles)
   .Tcl(

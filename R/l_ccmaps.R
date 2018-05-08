@@ -907,6 +907,9 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
     }
 
+    # Closes inspector if the CCmaps display window is closed
+    tkbind(w, '<Destroy>', function() tkdestroy(tt_inspector))
+
     tt_inspector
 
   }

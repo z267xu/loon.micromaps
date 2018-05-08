@@ -902,6 +902,9 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     }
 
+    # Closes inspector if the CCmaps display window is closed
+    tkbind(w$top, '<Destroy>', function() tkdestroy(tt_inspector))
+
     tt_inspector
 
   }
