@@ -797,13 +797,13 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       cond2scale_new <- tclvalue(cond2var.scale_i)
 
 
-      if (tclvalue(respvar_i) == tt$env$respvar & respscale_new == tt$env$respscale) {
+      if (tclvalue(respvar_i) == tt$env$respvar) {
 
         respvar_new <- tt$env$respvar
         resp_new <- spdf@data[[respvar_new]]
 
-        respbreaks_new <- c(convert_scale2act(respscale_new, as.numeric(tkcget(tt$env$scaletop, "-min")), resp_new),
-                            convert_scale2act(respscale_new, as.numeric(tkcget(tt$env$scaletop, "-max")), resp_new))
+        respbreaks_new <- c(convert_scale2act(tt$env$respscale, as.numeric(tkcget(tt$env$scaletop, "-min")), resp_new),
+                            convert_scale2act(tt$env$respscale, as.numeric(tkcget(tt$env$scaletop, "-max")), resp_new))
 
 
       } else {
@@ -823,13 +823,13 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       }
 
 
-      if (tclvalue(cond1var_i) == tt$env$cond1var & cond1scale_new == tt$env$cond1scale) {
+      if (tclvalue(cond1var_i) == tt$env$cond1var) {
 
         cond1var_new <- tt$env$cond1var
         cond1_new <- spdf@data[[cond1var_new]]
 
-        cond1breaks_new <- c(convert_scale2act(cond1scale_new, as.numeric(tkcget(tt$env$scaleright, '-min')), cond1_new),
-                             convert_scale2act(cond1scale_new, as.numeric(tkcget(tt$env$scaleright, '-max')), cond1_new))
+        cond1breaks_new <- c(convert_scale2act(tt$env$cond1scale, as.numeric(tkcget(tt$env$scaleright, '-min')), cond1_new),
+                             convert_scale2act(tt$env$cond1scale, as.numeric(tkcget(tt$env$scaleright, '-max')), cond1_new))
 
 
       } else {
@@ -849,13 +849,13 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
       }
 
 
-      if (tclvalue(cond2var_i) == tt$env$cond2var &  cond2scale_new == tt$env$cond2scale) {
+      if (tclvalue(cond2var_i) == tt$env$cond2var) {
 
         cond2var_new <- tt$env$cond2var
         cond2_new <- spdf@data[[cond2var_new]]
 
-        cond2breaks_new <- c(convert_scale2act(cond2scale_new, as.numeric(tkcget(tt$env$scalebottom, '-min')), cond2_new),
-                             convert_scale2act(cond2scale_new, as.numeric(tkcget(tt$env$scalebottom, '-max')), cond2_new))
+        cond2breaks_new <- c(convert_scale2act(tt$env$cond2scale, as.numeric(tkcget(tt$env$scalebottom, '-min')), cond2_new),
+                             convert_scale2act(tt$env$cond2scale, as.numeric(tkcget(tt$env$scalebottom, '-max')), cond2_new))
 
 
       } else {
@@ -913,7 +913,7 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
 
     # Do not allow inspector window to close otherwise
     tcl("wm", "protocol", tt_inspector, "WM_DELETE_WINDOW",
-        quote(cat('To close inspector, close the display window\n')))
+        quote(cat('To close inspector, close the main display window\n')))
 
     tt_inspector
 

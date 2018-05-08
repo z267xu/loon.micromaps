@@ -908,7 +908,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
     # Do not allow inspector window to close otherwise
     tcl("wm", "protocol", tt_inspector, "WM_DELETE_WINDOW",
-        quote(cat('To close inspector, close the display window\n')))
+        quote(cat('To close inspector, close the main display window\n')))
 
     tt_inspector
 
