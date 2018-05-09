@@ -2,7 +2,7 @@
 % Please edit documentation in R/l_micromaps.R
 \name{l_micromaps}
 \alias{l_micromaps}
-\title{Linked micromaps in loon}
+\title{Linked Micromaps in loon}
 \usage{
 l_micromaps(top = tktoplevel(), mm_inspector = TRUE, title = "Micromaps",
   map.label = "Map", lab.label = "Labels", spdf, grouping = NULL,
@@ -13,12 +13,13 @@ l_micromaps(top = tktoplevel(), mm_inspector = TRUE, title = "Micromaps",
 \arguments{
 \item{top}{Tk top level window. Defaults to a new window}
 
-\item{mm_inspector}{Whether to draw custom inspector for micromaps, which
+\item{mm_inspector}{Whether to draw custom inspector for the display, which
 allows for variable selection, variable label update, font size adjustment,
 and setting grouping of points. Defaults to TRUE. Once created, the inspector
 can only be closed when the main display window is closed}
 
-\item{title}{Title for micromap. Appears in the title bar of the toplevel window}
+\item{title}{Title for linked micromaps. Appears in the title bar of
+the toplevel window}
 
 \item{map.label}{Label for maps (rightmost) panel}
 
@@ -48,9 +49,10 @@ argument would look like:
 Defaults to NULL, in which case it is determined based on how many variables are
 provided to \code{variables}}
 
-\item{spacing}{Spacing scheme for points - either 'equal' or 'max'. 'equal'
-spaces points out equally, while 'max' ensures same amount of spacing between
-points as the row with the largest number of points}
+\item{spacing}{Spacing scheme for points - either 'equal' or 'max'. The 'equal'
+scheme spaces points out equally, while the 'max' scheme ensures the
+same amount of spacing between points as the row with the largest
+number of points}
 
 \item{color}{Color scheme. Defaults to NULL, in which case colors are
 generated using \code{loon::loon_palette}. Cannot be 'cornsilk' or 'magenta',
@@ -72,6 +74,12 @@ or whether it should overwrite the states of the other linked plot with its
 own linked states ("push")}
 
 \item{...}{Other optional named arguments to modify states of scatterplots}
+}
+\value{
+An object of classes \code{loon_micromaps} and \code{loon}, containing
+  the Tk toplevel window, \code{linkingGroup} value, \code{linkingKey} values,
+  and the handles for the \code{loon} plot objects corresponding to
+  the labels panel, scatterplot panel(s) and map panel in list form
 }
 \description{
 Compares different statistics across geographical regions

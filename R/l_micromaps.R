@@ -1,14 +1,15 @@
 
-#' @title Linked micromaps in loon
+#' @title Linked Micromaps in loon
 #'
 #' @description Compares different statistics across geographical regions
 #'
 #' @param top Tk top level window. Defaults to a new window
-#' @param mm_inspector Whether to draw custom inspector for micromaps, which
+#' @param mm_inspector Whether to draw custom inspector for the display, which
 #'   allows for variable selection, variable label update, font size adjustment,
 #'   and setting grouping of points. Defaults to TRUE. Once created, the inspector
 #'   can only be closed when the main display window is closed
-#' @param title Title for micromap. Appears in the title bar of the toplevel window
+#' @param title Title for linked micromaps. Appears in the title bar of
+#'   the toplevel window
 #' @param map.label Label for maps (rightmost) panel
 #' @param lab.label Label for labels (leftmost) panel
 #' @param spdf \code{SpatialPolygonsDataFrame} object to hold polygon coordinates
@@ -30,9 +31,10 @@
 #' @param num_optvars Number of possible optional variables for \code{mm_inspector}.
 #'   Defaults to NULL, in which case it is determined based on how many variables are
 #'   provided to \code{variables}
-#' @param spacing Spacing scheme for points - either 'equal' or 'max'. 'equal'
-#'   spaces points out equally, while 'max' ensures same amount of spacing between
-#'   points as the row with the largest number of points
+#' @param spacing Spacing scheme for points - either 'equal' or 'max'. The 'equal'
+#'   scheme spaces points out equally, while the 'max' scheme ensures the
+#'   same amount of spacing between points as the row with the largest
+#'   number of points
 #' @param color Color scheme. Defaults to NULL, in which case colors are
 #'   generated using \code{loon::loon_palette}. Cannot be 'cornsilk' or 'magenta',
 #'   which are reserved colors
@@ -48,6 +50,11 @@
 #'   or whether it should overwrite the states of the other linked plot with its
 #'   own linked states ("push")
 #' @param ... Other optional named arguments to modify states of scatterplots
+#'
+#' @return An object of classes \code{loon_micromaps} and \code{loon}, containing
+#'   the Tk toplevel window, \code{linkingGroup} value, \code{linkingKey} values,
+#'   and the handles for the \code{loon} plot objects corresponding to
+#'   the labels panel, scatterplot panel(s) and map panel in list form
 #'
 #' @export
 #'
@@ -608,6 +615,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
               scatterplots = p_scatterplot,
               maps = list(base = p_map_base, polygons = p_map))
 
+  attr(ret, 'class') <- c('loon_micromaps', 'loon')
 
 
   # Inspector -----

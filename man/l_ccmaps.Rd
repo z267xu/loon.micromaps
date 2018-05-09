@@ -2,7 +2,7 @@
 % Please edit documentation in R/l_ccmaps.R
 \name{l_ccmaps}
 \alias{l_ccmaps}
-\title{Conditioned choropleth maps in loon}
+\title{Conditioned Choropleth Maps (Conditioned Micromaps) in loon}
 \usage{
 l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
   respvar, respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
@@ -82,6 +82,12 @@ in which case \code{cond1} is used}
 \item{cond2.lab}{Label for second conditional variable for slider. Defaults to NULL,
 in which case \code{cond2} is used}
 }
+\value{
+An object of classes \code{loon_ccmaps} and \code{loon}, containing the
+  Tk toplevel window, \code{respvar} value, \code{cond1var} value,
+  \code{cond2var} value, and the handles for the \code{loon} map plot objects
+  in list form
+}
 \description{
 2-way panel of maps for visualizing multivariate data
 }
@@ -94,11 +100,11 @@ library(rgdal)
 columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 
 ## Plot
-l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
-         spdf = columbus,
-         respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
-         respscale = "actual", cond1scale = "actual", cond2scale = "actual",
-         optimize = FALSE)
+cc <- l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
+               spdf = columbus,
+               respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
+               respscale = "actual", cond1scale = "actual", cond2scale = "actual",
+               optimize = FALSE)
 
 }
 

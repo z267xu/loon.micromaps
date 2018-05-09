@@ -1,5 +1,5 @@
 
-#' @title Conditioned choropleth maps in loon
+#' @title Conditioned Choropleth Maps (Conditioned Micromaps) in loon
 #'
 #' @description 2-way panel of maps for visualizing multivariate data
 #'
@@ -54,6 +54,11 @@
 #' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select transmute mutate_all
 #' @importFrom magrittr %>%
 #'
+#' @return An object of classes \code{loon_ccmaps} and \code{loon}, containing the
+#'   Tk toplevel window, \code{respvar} value, \code{cond1var} value,
+#'   \code{cond2var} value, and the handles for the \code{loon} map plot objects
+#'   in list form
+#'
 #' @export
 #'
 #' @examples
@@ -65,11 +70,11 @@
 #' columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 #'
 #' ## Plot
-#' l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
-#'          spdf = columbus,
-#'          respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
-#'          respscale = "actual", cond1scale = "actual", cond2scale = "actual",
-#'          optimize = FALSE)
+#' cc <- l_ccmaps(title = "Columbus Residential Burglaries and Vehicle Thefts",
+#'                spdf = columbus,
+#'                respvar = "CRIME", cond1var = "PLUMB", cond2var = "HOVAL",
+#'                respscale = "actual", cond1scale = "actual", cond2scale = "actual",
+#'                optimize = FALSE)
 #'
 #'}
 #'
@@ -925,6 +930,8 @@ l_ccmaps <- function(tt = tktoplevel(), cc_inspector = TRUE,
   ret <- list(top = tt,
               respvar = respvar, cond1var = cond1var, cond2var = cond2var,
               maps = list(base = tt$env$p_base, polygons = tt$env$p))
+
+  attr(ret, 'class') <- c('loon_ccmaps', 'loon')
 
   return(invisible(ret))
 
