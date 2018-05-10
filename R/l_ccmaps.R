@@ -65,8 +65,8 @@
 #'\dontrun{
 #'
 #' ## Get data
-#' library(maptools)
 #' library(rgdal)
+#' library(maptools)
 #' columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 #'
 #' ## Plot

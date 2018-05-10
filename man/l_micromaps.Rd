@@ -87,8 +87,6 @@ Compares different statistics across geographical regions
 \examples{
 \dontrun{
 
-library(micromap)
-
 data("USstates")
 data("edPov")
 

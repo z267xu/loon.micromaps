@@ -65,8 +65,6 @@
 #' @examples
 #' \dontrun{
 #'
-#' library(micromap)
-#'
 #' data("USstates")
 #' data("edPov")
 #'
