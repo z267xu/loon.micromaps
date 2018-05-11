@@ -5,7 +5,10 @@ library(dplyr)
 
 # Reading in data
 cd <- readOGR(dsn = "data-raw", layer = 'gcd_000b06a_e', stringsAsFactors = F)
+# Source: http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gcd_000b06a_e.zip
+
 canada_demographics <- read.csv('data-raw/canada_cd_2006.csv', stringsAsFactors = F)
+# Source: Chen, Xin. 2011. “Visual Analysis of Immigration in Canada Based on Conditioned Choropleth Maps.” December. University of Waterloo
 
 
 # Subset to Southern Ontario census divisions

@@ -14,7 +14,7 @@
   \item{median_earnings}{Median annual earnings.}
   \item{employment}{Number of employed individuals.}
   \item{employ_rate_15plus}{Employment rate, those aged 15 or older.}
-  \item{employ_rate_24_54}{Employment rate, those aged between 25 and 54.}
+  \item{employ_rate_25_54}{Employment rate, those aged between 25 and 54.}
   \item{pop_density_cuberoot}{Cube root of population density.}
   \item{population_cuberoot}{Cube root of population.}
 }}

@@ -58,9 +58,15 @@
 #'
 #' @export
 #'
+#' @import loon
+#' @import tcltk
+#' @import sp
+#' @import grDevices
+#' @import stats
+#' @import utils
+#' @import methods
 #' @importFrom magrittr %>%
 #' @importFrom dplyr arrange_ arrange select_ mutate
-#' @importFrom purrr walk
 #'
 #' @examples
 #' \dontrun{
@@ -538,7 +544,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
   # Reset grid configuration; otherwise going from 2 -> 1 scatterplot columns will still leave 4 columns overall
   old <- as.character(tkgrid.slaves(top))
-  walk(old, function(x) tkgrid.forget(x))
+  lapply(old, function(x) tkgrid.forget(x))
 
 
   # Create labels
@@ -841,7 +847,7 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
       opt.vars <- Map(function(ii) {
 
-        if (identical(tclvalue(var_i[[ii]]), 'NA')) {
+        if (identical(tclvalue(var_i[[ii]]), 'N/A')) {
           return(NULL)
         } else {
           name <- tclvalue(var_i[[ii]])
