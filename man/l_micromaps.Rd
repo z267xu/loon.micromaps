@@ -87,8 +87,8 @@ Compares different statistics across geographical regions
 \examples{
 \dontrun{
 
-data("USstates")
-data("edPov")
+data("USstates", package = "micromap")
+data("edPov", package = "micromap")
 
 USstates@data <- merge(USstates@data, edPov, by.x = 'ST', by.y = 'StateAb')
 
