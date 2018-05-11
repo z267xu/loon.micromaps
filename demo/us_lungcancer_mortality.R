@@ -4,10 +4,11 @@
 
 local({
 
-  data("USstates")
-  data("us_lungmort")
+  data("USstates", package = "micromap")
+  data("us_lungmort_2009_2011", package = "loon.micromaps")
 
-  USstates@data <- merge(USstates@data, us_lungmort, by.x = "ST", by.y = "state.abbr")
+  USstates@data <- merge(USstates@data, us_lungmort_2009_2011,
+                         by.x = "ST", by.y = "state.abbr")
 
 
   readline("Create linked micrmoaps display. Press the <enter> key to continue: ")

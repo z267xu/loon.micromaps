@@ -24,7 +24,9 @@ Imports:
   tools
 Suggests:
   maptools,
-  rgdal
+  rgdal,
+  rgeos,
+  micromap
 LazyData: true
 RoxygenNote: 6.0.1
 Encoding: UTF-8
