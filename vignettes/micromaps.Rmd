@@ -107,8 +107,27 @@ This makes them particularly well-suited to development with the \code{loon} pac
 
 In this vignette, we illustrate the functionality of intereactive micromaps and conditional choropleth maps in loon, as implemented in the package `loon.micromaps`.
 
-# Canadian immigration data
+# Canadian census divisions
 
+To conduct its decennial census of the population of Canada, Statistics Canada divides Canada into geographic "census divisions" or "cd"s.  The spatial polygons for these divisions are contained in 
+
+```{r Canadian census divisions, eval = FALSE}
+data(cd_Canada)
+``` 
+
+Much of the population of Canada is found in southwestern Ontario; the census divisions of this part of the country have been extracted for convenience and saved as a "SpatialPolygonsDataFrame" (defined by package `sp`):
+
+```{r southwestern Ontario census divisions, eval = TRUE, fig.width = 5, fig.height=5, fig.align="center", out.width="80%"}
+
+data(cd_southon)
+class(cd_southon)
+
+names(cd_southon)
+
+plot(cd_southon, 
+     main = "Canadian census divisions", 
+     sub = "South western Ontario")
+``` 
 
 
 # References
