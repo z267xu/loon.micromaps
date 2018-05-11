@@ -17,11 +17,11 @@
 #'   in which case \code{respvar} is used
 #' @param cond1var Name of the first conditioning variable (controls
 #'   panel assignment in the vertical direction)
-#' @param cond1.lab Label for first conditional variable for slider. Defaults to NULL,
+#' @param cond1var.lab Label for first conditional variable for slider. Defaults to NULL,
 #'   in which case \code{cond1} is used
 #' @param cond2var Name of the second conditioning variable (controls
 #'   panel assignment in the horizontal direction)
-#' @param cond2.lab Label for second conditional variable for slider. Defaults to NULL,
+#' @param cond2var.lab Label for second conditional variable for slider. Defaults to NULL,
 #'   in which case \code{cond2} is used
 #' @param respbreaks Determines how the response data is divided into three groups
 #'   for coloring scheme. It can either be the integer 2 or a numeric vector of
@@ -51,7 +51,14 @@
 #'   Defaults to 20. A higher \code{otry} value leads to more precise estimates
 #'   at the cost of longer computation time
 #'
-#' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select transmute mutate_all
+#' @import loon
+#' @import tcltk
+#' @import sp
+#' @import grDevices
+#' @import stats
+#' @import utils
+#' @import methods
+#' @importFrom dplyr mutate mutate_at rowwise funs group_by ungroup summarise select transmute mutate_all sample_n desc
 #' @importFrom magrittr %>%
 #'
 #' @return An object of classes \code{loon_ccmaps} and \code{loon}, containing the
@@ -65,8 +72,8 @@
 #'\dontrun{
 #'
 #' ## Get data
-#' library(maptools)
 #' library(rgdal)
+#' library(maptools)
 #' columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 #'
 #' ## Plot

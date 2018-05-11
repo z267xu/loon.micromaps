@@ -34,8 +34,14 @@ in which case \code{respvar} is used}
 \item{cond1var}{Name of the first conditioning variable (controls
 panel assignment in the vertical direction)}
 
+\item{cond1var.lab}{Label for first conditional variable for slider. Defaults to NULL,
+in which case \code{cond1} is used}
+
 \item{cond2var}{Name of the second conditioning variable (controls
 panel assignment in the horizontal direction)}
+
+\item{cond2var.lab}{Label for second conditional variable for slider. Defaults to NULL,
+in which case \code{cond2} is used}
 
 \item{respbreaks}{Determines how the response data is divided into three groups
 for coloring scheme. It can either be the integer 2 or a numeric vector of
@@ -75,12 +81,6 @@ optimized for \eqn{R^2}. Requires a long time to compute. Defaults to FALSE}
 for optimization (see above). Required if \code{optimize = TRUE}.
 Defaults to 20. A higher \code{otry} value leads to more precise estimates
 at the cost of longer computation time}
-
-\item{cond1.lab}{Label for first conditional variable for slider. Defaults to NULL,
-in which case \code{cond1} is used}
-
-\item{cond2.lab}{Label for second conditional variable for slider. Defaults to NULL,
-in which case \code{cond2} is used}
 }
 \value{
 An object of classes \code{loon_ccmaps} and \code{loon}, containing the
@@ -95,8 +95,8 @@ An object of classes \code{loon_ccmaps} and \code{loon}, containing the
 \dontrun{
 
 ## Get data
-library(maptools)
 library(rgdal)
+library(maptools)
 columbus <- readOGR(system.file("shapes/columbus.shp", package = "maptools")[1], verbose = F)
 
 ## Plot

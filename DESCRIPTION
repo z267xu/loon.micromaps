@@ -2,15 +2,29 @@ Package: loon.micromaps
 Type: Package
 Title: Interactive Micromaps with loon
 Version: 0.1.0
-Authors@R: person('Alex', 'Wang', email = 'x249wang@uwaterloo.ca', role = c('aut', 'cre'))
-Maintainer: Alex Wang <x249wang@uwaterloo.ca>
-Description: Interactive conditioned choropleth maps and micromaps for visualizing geographical data.
+Authors@R: c(
+  person('Alex', 'Wang', email = 'x249wang@uwaterloo.ca', role = c('aut', 'cre')),
+  person('R. Wayne', 'Oldford', email = 'rwoldford@uwaterloo.ca', role = c('aut'))
+  )
 URL: https://github.com/x249wang/loon.micromaps.git
+Description: Interactive micromaps for exploring geospatial data.
 License: GPL-2
 Depends:
   R (>= 3.4.0),
-  loon
-Encoding: UTF-8
+  loon,
+  tcltk,
+  methods,
+  sp
+Imports:
+  magrittr,
+  dplyr,
+  stats,
+  utils,
+  grDevices,
+  tools
+Suggests:
+  maptools,
+  rgdal
 LazyData: true
 RoxygenNote: 6.0.1
-VignetteBuilder: knitr
+Encoding: UTF-8
