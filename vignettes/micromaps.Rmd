@@ -107,7 +107,9 @@ This makes them particularly well-suited to development with the \code{loon} pac
 
 In this vignette, we illustrate the functionality of intereactive micromaps and conditional choropleth maps in loon, as implemented in the package `loon.micromaps`.
 
-# Canadian census divisions
+# Canadian census data
+
+## Spatial data:  Canadian census divisions
 
 To conduct its decennial census of the population of Canada, Statistics Canada divides Canada into geographic "census divisions" or "cd"s.  The spatial polygons for these divisions are contained in 
 
@@ -118,8 +120,7 @@ data(cd_Canada)
 Much of the population of Canada is found in southwestern Ontario; the census divisions of this part of the country have been extracted for convenience and saved as a "SpatialPolygonsDataFrame" (defined by package `sp`):
 
 ```{r southwestern Ontario census divisions, eval = TRUE, fig.width = 5, fig.height=5, fig.align="center", out.width="80%"}
-
-data(cd_southon)
+data("cd_southon")
 class(cd_southon)
 
 names(cd_southon)
@@ -129,5 +130,52 @@ plot(cd_southon,
      sub = "South western Ontario")
 ``` 
 
+
+## Canadian demographics census data
+
+We also have Canadian demographic data from the 2006 census for each census division.
+
+```{r Canadian demographics}
+data("canada_demographics")
+str(canada_demographics)
+```
+
+Here `id` is the census division `id` and the remaining variates are values recorded in the 2006 census for those divisions (the last two variates are transformations of the first two).
+
+## Merging the data
+
+To construct a micromap based on these values, the demographic data of interest must be merged with the spatial data:
+
+```{r merging data into spatial data frame}
+cd_southon@data <- merge(cd_southon@data, canada_demographics,
+                         all.x = T, all.y = F, by.y = 'id', by.x = 'CDUID')
+
+names(cd_southon@data)
+```
+
+
+# Linked micromaps
+
+```{r linked micromap, eval = FALSE}
+mm <- l_micromaps(spdf = cd_southon,
+                  lab.label = 'Census Divisions',
+                  variables = list(id.var = 'CDNAME',
+                                   grouping.var =  
+                                     list(name = 'pop_density', 
+                                          xlab = 'Pop per sq. km')),
+                  spacing = 'equal', n_groups = 5,
+                  linkingGroup = 'SWOntario', 
+                  linkingKey = cd_southon@data$CDNAME,
+                  sync = 'push',
+                  showItemLabels = TRUE, 
+                  itemLabel = cd_southon@data$CDNAME)
+
+l_hist(cd_southon@data$"pop_density_cuberoot", 
+       xlabel = "Cube root of population density",
+       showScales = TRUE, showGuides = TRUE,
+       yshows = "density",
+       linkingGroup = 'SWOntario', 
+       linkingKey = mm$linkingKey)
+```
 
 # References
