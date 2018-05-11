@@ -1,4 +1,4 @@
-# Interactive Micromaps with loon in R
+# Interactive Micromaps in R with loon
 
 ## Set Up
 
