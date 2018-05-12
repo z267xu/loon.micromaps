@@ -7,6 +7,8 @@
 #'
 #' @format The format is formal class 'SpatialPolygonsDataFrame' [package "sp"].
 #' @source Statistics Canada (\url{http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gcd_000b06a_e.zip})
+#' @note The geometries are simplified using \code{gSimplify} [package "rgeos"],
+#' and with polygon holes removed.
 #'
 "cd_Canada_2006"
 
@@ -18,6 +20,8 @@
 #'
 #' @format The format is formal class 'SpatialPolygonsDataFrame' [package "sp"].
 #' @source Statistics Canada (\url{http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gcd_000b06a_e.zip})
+#' @note The geometries are simplified using \code{gSimplify} [package "rgeos"],
+#' and with polygon holes removed.
 #'
 "cd_SWOntario_2006"
 
