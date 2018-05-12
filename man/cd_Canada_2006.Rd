@@ -15,4 +15,8 @@ cd_Canada_2006
 An object of class 'SpatialPolygonsDataFrame' created from subsetting
 a shapefile of Canadian census division boundaries. There are 288 census divisions.
 }
+\note{
+The geometries are simplified using \code{gSimplify} [package "rgeos"],
+and with polygon holes removed.
+}
 \keyword{datasets}
