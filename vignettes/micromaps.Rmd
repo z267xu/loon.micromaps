@@ -159,7 +159,7 @@ names(cd_SWOntario_2006@data)
 
 ## Linked micromaps
 
-The following creates the linked micromaps display with population density, percent immigrant population and education rate for the south western Ontario census divisions, as well as the histogram of cube root of the population density. The data points are linked using census division names as the ```linkingKey```. The result is shown in Figure \ref{fig:fig2}
+The following creates the linked micromaps display with percent immigrant population, population density and education rate for the south western Ontario census divisions, as well as the histogram of cube root of the population density. The data points are linked using census division names as the ```linkingKey```. The result is shown in Figure \ref{fig:fig2}
 
 Two inspectors accompany the display - the usual ```loon``` inspector and the custom inspector for linked micromaps, which allows for updating many aspects of the display. 
 
@@ -167,11 +167,11 @@ Two inspectors accompany the display - the usual ```loon``` inspector and the cu
 mm <- l_micromaps(spdf = cd_SWOntario_2006,
                   lab.label = 'Census Divisions',
                   variables = list(id.var = 'CDNAME',
-                                   grouping.var =  
-                                     list(name = 'pop_density', 
-                                          xlab = 'Pop per sq. km'),
-                                   var2 = list(name = 'pct_immigrants',
-                                               xlab = 'percent'), 
+                                   grouping.var = 
+                                     list(name = 'pct_immigrants',
+                                          xlab = 'percent'), 
+                                   var2 = list(name = 'pop_density', 
+                                               xlab = 'Pop per sq. km'),
                                    var3 = list(name = 'bachelor_above', 
                                                xlab = 'percent')),
                   spacing = 'equal', n_groups = 5,
@@ -182,7 +182,7 @@ mm <- l_micromaps(spdf = cd_SWOntario_2006,
                   itemLabel = cd_SWOntario_2006@data$CDNAME)
 
 l_hist(cd_SWOntario_2006@data$"pop_density_cuberoot", 
-       xlabel = "Cube root of population density",
+       xlabel = "Cube root of population density per square km",
        showScales = TRUE, showGuides = TRUE,
        yshows = "density",
        linkingGroup = 'SWOntario', 
@@ -321,7 +321,7 @@ cc <- l_ccmaps(spdf = USstates, title = 'CCmaps',
 knitr::include_graphics("figures/us_ccmaps.png")
 ```
 
-\vspace*{3cm}
+\vspace*{5cm}
 
 # References
 
