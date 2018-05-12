@@ -111,10 +111,16 @@ In this vignette, we illustrate the functionality of intereactive micromaps and 
 
 ## Spatial data:  Canadian census divisions
 
-To conduct its decennial census of the population of Canada, Statistics Canada divides Canada into geographic "census divisions" or "cd"s.  The spatial polygons for these divisions are contained in 
+To conduct its decennial census of the population of Canada, Statistics Canada divides Canada into geographic "census divisions" or "cd"s.  The spatial polygons for these divisions in 2006 are contained in 
 
-```{r Canadian census divisions, eval = FALSE}
-data(cd_Canada)
+```{r Canadian census divisions, eval = TRUE}
+data(cd_Canada_2006)
+``` 
+
+This is a "SpatialPolygonsDataFrame" (from the `sp` package). 
+
+```{r Canadian census divisions map, eval = TRUE, fig.width = 5, fig.height=5, fig.align="center", out.width="80%"}
+plot(cd_Canada_2006, main = "Canadian census divisions")
 ``` 
 
 Much of the population of Canada is found in southwestern Ontario; the census divisions of this part of the country have been extracted for convenience and saved as a "SpatialPolygonsDataFrame" (defined by package `sp`):
