@@ -151,8 +151,10 @@ Here `id` is the census division `id` and the remaining variables are values rec
 To construct a micromap based on these values, the demographic data of interest must be merged with the spatial data:
 
 ```{r merging canadian data into spatial data frame}
-cd_SWOntario_2006@data <- merge(cd_SWOntario_2006@data, canada_demographics_2006,
-                                all.x = T, all.y = F, by.y = 'id', by.x = 'CDUID')
+cd_SWOntario_2006@data <- merge(cd_SWOntario_2006@data, 
+                                canada_demographics_2006,
+                                all.x = T, all.y = F, 
+                                by.y = 'id', by.x = 'CDUID')
 
 names(cd_SWOntario_2006@data)
 ```
