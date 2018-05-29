@@ -1,6 +1,6 @@
 
 library(rgdal)
-library(rgeos)
+library(rmapshaper)
 library(dplyr)
 
 # Canadian census division spatial data -----
@@ -16,22 +16,8 @@ lapply(cd_Canada_2006@polygons, function(x) {
 # 30 holes
 
 
-# Simplify geometry while preserving topology -----
-data_2006 <- cd_Canada_2006@data
-cd_Canada_2006 <- gSimplify(cd_Canada_2006, tol = 0.05, topologyPreserve = TRUE) %>%
-  SpatialPolygonsDataFrame(., data_2006)
-
-format(object.size(cd_Canada_2006), units = 'Mb')
-# 26.9 Mb
-
-lapply(cd_Canada_2006@polygons, function(x) {
-  lapply(x@Polygons, function(y) y@hole)
-}) %>% unlist %>% sum()
-# 30 holes preserved
-
-
 # Remove holes -----
-holes_coords <-lapply(cd_Canada_2006@polygons, function(x) {
+holes_coords <- lapply(cd_Canada_2006@polygons, function(x) {
 
   Map(function(y) {
 
@@ -68,6 +54,19 @@ new_polygons <- lapply(cd_Canada_2006@polygons, function(x) {
 })
 
 cd_Canada_2006@polygons <- new_polygons
+
+
+lapply(cd_Canada_2006@polygons, function(x) {
+  lapply(x@Polygons, function(y) y@hole)
+}) %>% unlist %>% sum()
+# 0 holes left
+
+
+# Simplify geometry while preserving topology -----
+cd_Canada_2006 <- ms_simplify(cd_Canada_2006, keep = 0.002, keep_shape = TRUE)
+
+format(object.size(cd_Canada_2006), units = 'Mb')
+# 1.3 Mb
 
 
 # Subset to Southern Ontario census divisions -----
