@@ -3,8 +3,8 @@ Type: Package
 Title: Interactive Micromaps with loon
 Version: 0.1.0
 Authors@R: c(
-  person('Alex', 'Wang', email = 'x249wang@uwaterloo.ca', role = c('aut', 'cre')),
-  person('R. Wayne', 'Oldford', email = 'rwoldford@uwaterloo.ca', role = c('aut'))
+  person('Alex', 'Wang', email = 'x249wang@uwaterloo.ca', role = c('aut')),
+  person('R. Wayne', 'Oldford', email = 'rwoldford@uwaterloo.ca', role = c('aut', 'cre'))
   )
 URL: https://github.com/x249wang/loon.micromaps.git
 Description: Interactive micromaps for exploring geospatial data.
