@@ -4,11 +4,12 @@
 \alias{l_micromaps}
 \title{Linked Micromaps in loon}
 \usage{
-l_micromaps(top = tktoplevel(), mm_inspector = TRUE, title = "Micromaps",
-  map.label = "Map", lab.label = "Labels", spdf, grouping = NULL,
-  n_groups = NULL, variables, num_optvars = NULL, spacing = c("equal",
-  "max"), color = NULL, size = 6, linkingKey = NULL,
-  linkingGroup = NULL, sync = c("pull", "push"), ...)
+l_micromaps(top = tktoplevel(), mm_inspector = TRUE,
+  title = "Micromaps", map.label = "Map", lab.label = "Labels", spdf,
+  grouping = NULL, n_groups = NULL, variables, num_optvars = NULL,
+  spacing = c("equal", "max"), color = NULL, size = 6,
+  linkingKey = NULL, linkingGroup = NULL, sync = c("pull", "push"),
+  ...)
 }
 \arguments{
 \item{top}{Tk top level window. Defaults to a new window}

@@ -161,7 +161,6 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
   scatterplot_vars <- names(vars)
 
 
-
   # Data-related -----
   n <- nrow(spdf@data)
   spdf@data$id <- 1:n
@@ -562,6 +561,25 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
 
   map_lab <- tcl('label', l_subwin(top,'label_for_maps'), text = map.label)
 
+  titles <- unname(
+    c(lab.label,
+      sapply(scatterplot_vars,
+             function(var){
+               get(paste0(var, '.label'))
+             }
+      ),
+      map.label
+    )
+  )
+
+  xlabels <- unname(
+    sapply(scatterplot_vars,
+           function(var){
+             get(paste0(var, '.xlab'))
+           }
+    )
+  )
+
 
   # Layout
   n_row <- n_groups + 3
@@ -615,11 +633,14 @@ l_micromaps <- function(top = tktoplevel(), mm_inspector = TRUE,
   ret <- list(top = top,
               linkingGroup = linkingGroup,
               linkingKey = linkingKey,
+              titles = titles,
+              xlabels = xlabels,
+              p_scale_base = p_scale_base,
               labels = list(base = p_label, text = p_label_text),
               scatterplots = p_scatterplot,
               maps = list(base = p_map_base, polygons = p_map))
 
-  attr(ret, 'class') <- c('loon_micromaps', 'loon')
+  attr(ret, 'class') <- c('l_micromaps', 'l_compound', 'loon')
 
 
   # Inspector -----
