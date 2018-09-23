@@ -4,13 +4,14 @@
 \alias{l_ccmaps}
 \title{Conditioned Choropleth Maps (Conditioned Micromaps) in loon}
 \usage{
-l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps", spdf,
-  respvar, respvar.lab = NULL, cond1var, cond1var.lab = NULL, cond2var,
-  cond2var.lab = NULL, respbreaks = 2, cond1breaks = 2, cond2breaks = 2,
-  respscale = c("actual", "percent", "log"), cond1scale = c("actual",
-  "percent", "log"), cond2scale = c("actual", "percent", "log"), size = 10,
-  seg1col = "blue", seg2col = "darkgrey", seg3col = "red",
-  optimize = FALSE, otry = 20)
+l_ccmaps(tt = tktoplevel(), cc_inspector = TRUE, title = "CCmaps",
+  spdf, respvar, respvar.lab = NULL, cond1var, cond1var.lab = NULL,
+  cond2var, cond2var.lab = NULL, respbreaks = 2, cond1breaks = 2,
+  cond2breaks = 2, respscale = c("actual", "percent", "log"),
+  cond1scale = c("actual", "percent", "log"), cond2scale = c("actual",
+  "percent", "log"), size = 10, seg1col = "blue",
+  seg2col = "darkgrey", seg3col = "red", optimize = FALSE,
+  otry = 20)
 }
 \arguments{
 \item{tt}{Tk top level window. Defaults to a new window}
@@ -83,7 +84,7 @@ Defaults to 20. A higher \code{otry} value leads to more precise estimates
 at the cost of longer computation time}
 }
 \value{
-An object of classes \code{loon_ccmaps} and \code{loon}, containing the
+An object of classes \code{l_ccmaps} and \code{loon}, containing the
   Tk toplevel window, \code{respvar} value, \code{cond1var} value,
   \code{cond2var} value, and the handles for the \code{loon} map plot objects
   in list form
